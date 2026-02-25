@@ -526,35 +526,19 @@ function clearBusinessUI() {
   document.getElementById("dashMonths").innerText = "-";
 }
 
-
 document.getElementById("addInjection").addEventListener("click", () => {
 
   const injection = {
     month: Number(injectMonth.value),
-    amount: Number(injectAmount.value)
+    amount: Number(injectAmount.value),
+    allocation: {
+      bankPercent: Number(injectBankPercent.value) || 0,
+      privatePercent: Number(injectPrivatePercent.value) || 0,
+      bufferPercent: Number(injectBufferPercent.value) || 0,
+      growthPercent: Number(injectGrowthPercent.value) || 0
+    }
   };
 
   capitalInjections.push(injection);
   renderInjections();
-
-  injectMonth.value = "";
-  injectAmount.value = "";
 });
-
-function renderInjections() {
-  injectionList.innerHTML = "";
-
-  capitalInjections.forEach((inj, index) => {
-    injectionList.innerHTML += `
-      <li>
-        Month ${inj.month} → ₹${inj.amount}
-        <button onclick="deleteInjection(${index})">Remove</button>
-      </li>
-    `;
-  });
-}
-
-window.deleteInjection = function(index) {
-  capitalInjections.splice(index, 1);
-  renderInjections();
-};

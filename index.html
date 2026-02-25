@@ -288,41 +288,37 @@
 
 <div class="grid-2">
   <div class="input-card">
-    <label>
-      Injection Month
-      <span class="tooltip-container">
-        <span class="tooltip-icon">?</span>
-        <span class="tooltip-text">
-          Month when external capital enters business.
-          <br><br>
-          Example:
-          If first investor tranche comes in Month 2,
-          enter 2.
-        </span>
-      </span>
-    </label>
+    <label>Injection Month</label>
     <input id="injectMonth" type="number">
   </div>
 
   <div class="input-card">
-    <label>
-      Injection Amount
-      <span class="tooltip-container">
-        <span class="tooltip-icon">?</span>
-        <span class="tooltip-text">
-          Amount of capital injected.
-          <br><br>
-          Example:
-          ₹50,00,000 for first tranche.
-        </span>
-      </span>
-    </label>
+    <label>Injection Amount</label>
     <input id="injectAmount" type="number">
+  </div>
+
+  <div class="input-card">
+    <label>% to Bank Repayment</label>
+    <input id="injectBankPercent" type="number">
+  </div>
+
+  <div class="input-card">
+    <label>% to Private Repayment</label>
+    <input id="injectPrivatePercent" type="number">
+  </div>
+
+  <div class="input-card">
+    <label>% to Buffer</label>
+    <input id="injectBufferPercent" type="number">
+  </div>
+
+  <div class="input-card">
+    <label>% to Growth Expansion</label>
+    <input id="injectGrowthPercent" type="number">
   </div>
 </div>
 
 <button id="addInjection" class="small-btn">Add Injection Phase</button>
-
 <ul id="injectionList"></ul>
     <!-- ================= BANK LOANS ================= -->
 

@@ -78,8 +78,42 @@ export function runProjection(bankLoans, privateInvestors, config) {
 ========================= */
 
 config.capitalInjections.forEach(inj => {
+
   if (inj.month === month) {
-    cash += inj.amount;
+
+    const bankAllocation =
+      inj.amount * (inj.allocation.bankPercent / 100);
+
+    const privateAllocation =
+      inj.amount * (inj.allocation.privatePercent / 100);
+
+    const bufferAllocation =
+      inj.amount * (inj.allocation.bufferPercent / 100);
+
+    const growthAllocation =
+      inj.amount * (inj.allocation.growthPercent / 100);
+
+    // Reduce bank principal
+    bankLoans.forEach(b => {
+      if (bankAllocation > 0) {
+        const reduce = Math.min(b.principal, bankAllocation);
+        b.principal -= reduce;
+      }
+    });
+
+    // Reduce private principal
+    privateInvestors.forEach(p => {
+      if (privateAllocation > 0) {
+        const reduce = Math.min(p.principal, privateAllocation);
+        p.principal -= reduce;
+      }
+    });
+
+    // Add buffer to cash
+    cash += bufferAllocation;
+
+    // Increase future marketing base
+    config.defaultMarketingSpend += growthAllocation / 6;
   }
 });
     /* =========================

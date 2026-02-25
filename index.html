@@ -8,9 +8,39 @@
 <body>
 
   <h1>Capital Simulation Engine</h1>
+
+  <section>
+    <h2>Business Config</h2>
+    <input id="revenue" type="number" placeholder="Monthly Revenue">
+    <input id="expenses" type="number" placeholder="Monthly Expenses">
+    <input id="openingCash" type="number" placeholder="Opening Cash">
+  </section>
+
+  <section>
+    <h2>Add Bank Loan</h2>
+    <input id="bankName" placeholder="Name">
+    <input id="bankPrincipal" type="number" placeholder="Principal">
+    <input id="bankRate" type="number" placeholder="Annual %">
+    <input id="bankEMI" type="number" placeholder="EMI">
+    <button id="addBank">Add Bank Loan</button>
+
+    <ul id="bankList"></ul>
+  </section>
+
+  <section>
+    <h2>Add Private Investor</h2>
+    <input id="invName" placeholder="Name">
+    <input id="invPrincipal" type="number" placeholder="Principal">
+    <input id="invRate" type="number" placeholder="Monthly %">
+    <button id="addInvestor">Add Investor</button>
+
+    <ul id="investorList"></ul>
+  </section>
+
   <button id="runSimulation">Run Simulation</button>
 
-  <pre id="output"></pre>
+  <h2>Projection Output</h2>
+  <div id="output"></div>
 
   <script type="module" src="main.js"></script>
 </body>

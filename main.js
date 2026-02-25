@@ -399,20 +399,6 @@ window.deletePhase = function(index) {
   renderPhases();
 };
 
-function renderPhases() {
-  phaseList.innerHTML = "";
-
-  strategyTimeline.forEach((phase, index) => {
-    phaseList.innerHTML += `
-      <li>
-        M${phase.startMonth}–M${phase.endMonth}
-        | +₹${phase.extraMarketing}
-        | +${phase.seasonalBoostPercent}%
-        <button onclick="deletePhase(${index})">Remove</button>
-      </li>
-    `;
-  });
-}
 
 window.deletePhase = function(index) {
   strategyTimeline.splice(index, 1);

@@ -1,55 +1,73 @@
 import { processBanks } from './bankEngine.js';
 import { processPrivateInvestors } from './privateEngine.js';
-import { calculateMonthlyDeficit } from './analyticsEngine.js';
 
 export function runProjection(bankLoans, privateInvestors, config) {
 
   let cash = config.openingCash;
   let history = [];
+  let profitabilityMonth = null;
 
   for (let month = 1; month <= config.months; month++) {
 
-   /* =========================
-   REVENUE ENGINE
-========================= */
-
-const growthFactor =
-  1 + (config.monthlyGrowthPercent / 100);
-
-const baseRevenue =
-  config.baseRevenue * Math.pow(growthFactor, month - 1);
-
-let marketingSpend =
-  config.marketingPlan.defaultSpend;
-
-if (config.marketingPlan.custom[month]) {
-  marketingSpend =
-    config.marketingPlan.custom[month];
-}
-
-const marketingRevenue =
-  marketingSpend * config.marketingROI;
-
-const totalRevenue =
-  baseRevenue + marketingRevenue;
-
-/* =========================
-   EXPENSE ENGINE
-========================= */
-
-const inventoryCost =
-  totalRevenue * (config.inventoryCostPercent / 100);
-
-const totalExpenses =
-  config.fixedExpenses
-  + config.salary
-  + marketingSpend
-  + inventoryCost;
-
-cash += totalRevenue;
-cash -= totalExpenses;
     /* =========================
-       3️⃣ CASHFLOW BEFORE DEBT
+       1️⃣ BASE REVENUE (GROWTH)
+    ========================== */
+
+    const growthFactor =
+      1 + (config.monthlyGrowthPercent / 100);
+
+    const baseRevenue =
+      config.baseRevenue * Math.pow(growthFactor, month - 1);
+
+
+    /* =========================
+       2️⃣ STRATEGY TIMELINE APPLY
+    ========================== */
+
+    let marketingSpend = config.defaultMarketingSpend;
+    let seasonalBoost = 0;
+    let extraFixed = 0;
+
+    config.strategyTimeline.forEach(phase => {
+      if (month >= phase.startMonth && month <= phase.endMonth) {
+        marketingSpend += phase.extraMarketing;
+        seasonalBoost += phase.seasonalBoostPercent;
+        extraFixed += phase.extraFixedCost;
+      }
+    });
+
+
+    /* =========================
+       3️⃣ TOTAL REVENUE
+    ========================== */
+
+    const marketingRevenue =
+      marketingSpend * config.marketingROI;
+
+    let totalRevenue =
+      baseRevenue + marketingRevenue;
+
+    totalRevenue +=
+      totalRevenue * (seasonalBoost / 100);
+
+
+    /* =========================
+       4️⃣ TOTAL EXPENSES
+    ========================== */
+
+    const inventoryCost =
+      totalRevenue * (config.inventoryCostPercent / 100);
+
+    const totalExpenses =
+      config.fixedExpenses
+      + config.salary
+      + marketingSpend
+      + inventoryCost
+      + extraFixed;
+
+
+    /* =========================
+       5️⃣ CASHFLOW BEFORE DEBT
     ========================== */
 
     cash += totalRevenue;
@@ -57,7 +75,7 @@ cash -= totalExpenses;
 
 
     /* =========================
-       4️⃣ BANK LOANS
+       6️⃣ BANK LOANS
     ========================== */
 
     const bankData = processBanks(bankLoans);
@@ -65,7 +83,7 @@ cash -= totalExpenses;
 
 
     /* =========================
-       5️⃣ PRIVATE INVESTORS
+       7️⃣ PRIVATE INVESTORS
     ========================== */
 
     const privateData =
@@ -75,7 +93,7 @@ cash -= totalExpenses;
 
 
     /* =========================
-       6️⃣ DEFICIT CALCULATION
+       8️⃣ MONTHLY DEFICIT
     ========================== */
 
     const monthlyDeficit =
@@ -86,7 +104,16 @@ cash -= totalExpenses;
 
 
     /* =========================
-       7️⃣ STORE SNAPSHOT
+       9️⃣ PROFITABILITY CHECK
+    ========================== */
+
+    if (monthlyDeficit > 0 && profitabilityMonth === null) {
+      profitabilityMonth = month;
+    }
+
+
+    /* =========================
+       10️⃣ SAVE MONTH SNAPSHOT
     ========================== */
 
     history.push({
@@ -94,15 +121,13 @@ cash -= totalExpenses;
       cash,
       revenue: totalRevenue,
       expenses: totalExpenses,
-      bankEMI: bankData.totalEMI,
-      bankInterest: bankData.totalInterest,
-      privateInterest: privateData.totalInterest,
-      privatePaid: privateData.totalPaid,
       marketingSpend,
       inventoryCost,
-      monthlyDeficit,
-      tierBreakdown: privateData.tierSummary
+      bankEMI: bankData.totalEMI,
+      privateInterest: privateData.totalInterest,
+      monthlyDeficit
     });
+
 
     if (cash < 0) {
       history.push({
@@ -111,6 +136,15 @@ cash -= totalExpenses;
       break;
     }
   }
+
+  /* =========================
+     FINAL SUMMARY
+  ========================== */
+
+  history.push({
+    summary: true,
+    profitabilityMonth
+  });
 
   return history;
 }

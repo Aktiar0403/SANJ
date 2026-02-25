@@ -1,125 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Capital Simulation Engine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:,">
 </head>
 
-<div id="loginSection">
-  <h2>Login</h2>
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-  <button id="loginBtn">Login</button>
-</div>
-
-<div id="appSection" style="display:none;">
-
-
 <body>
 
+  <!-- ================= LOGIN ================= -->
 
-  <h1>Capital Simulation Engine</h1>
+  <div id="loginSection" class="auth-card">
+    <h2>Login</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="loginBtn" class="primary-btn">Login</button>
+  </div>
 
-<section class="business-card">
+  <!-- ================= MAIN APP ================= -->
 
-  <h2>Business Model</h2>
+  <div id="appSection" style="display:none;">
 
-  <div class="grid-2">
+    <h1>Capital Simulation Engine</h1>
 
-    <div class="input-card">
-      <label>Base Revenue</label>
-      <input id="baseRevenue" type="number" placeholder="800000">
-    </div>
+    <!-- ================= BUSINESS MODEL ================= -->
 
-    <div class="input-card">
-      <label>Growth %</label>
-      <input id="growthPercent" type="number" placeholder="2">
-    </div>
+    <section class="business-card">
 
-    <div class="input-card">
-      <label>Marketing Spend</label>
-      <input id="marketingSpend" type="number" placeholder="200000">
-    </div>
+      <h2>Business Model</h2>
 
-    <div class="input-card">
-      <label>Marketing ROI</label>
-      <input id="marketingROI" type="number" placeholder="3">
-    </div>
+      <div class="grid-2">
 
-    <div class="input-card">
-      <label>Fixed Expenses</label>
-      <input id="fixedExpenses" type="number" placeholder="300000">
-    </div>
+        <div class="input-card">
+          <label>Base Revenue</label>
+          <input id="baseRevenue" type="number" placeholder="800000">
+        </div>
 
-    <div class="input-card">
-      <label>Salary</label>
-      <input id="salary" type="number" placeholder="200000">
-    </div>
+        <div class="input-card">
+          <label>Growth %</label>
+          <input id="growthPercent" type="number" placeholder="2">
+        </div>
 
-    <div class="input-card">
-      <label>Inventory %</label>
-      <input id="inventoryPercent" type="number" placeholder="40">
-    </div>
+        <div class="input-card">
+          <label>Default Marketing Spend</label>
+          <input id="marketingSpend" type="number" placeholder="200000">
+        </div>
 
-    <div class="input-card">
-      <label>Opening Cash</label>
-      <input id="openingCash" type="number" placeholder="500000">
-    </div>
+        <div class="input-card">
+          <label>Marketing ROI</label>
+          <input id="marketingROI" type="number" placeholder="3">
+        </div>
+
+        <div class="input-card">
+          <label>Fixed Expenses</label>
+          <input id="fixedExpenses" type="number" placeholder="300000">
+        </div>
+
+        <div class="input-card">
+          <label>Salary</label>
+          <input id="salary" type="number" placeholder="200000">
+        </div>
+
+        <div class="input-card">
+          <label>Inventory %</label>
+          <input id="inventoryPercent" type="number" placeholder="40">
+        </div>
+
+        <div class="input-card">
+          <label>Opening Cash</label>
+          <input id="openingCash" type="number" placeholder="500000">
+        </div>
+
+      </div>
+
+      <!-- ================= STRATEGY TIMELINE ================= -->
+
+      <h3 class="section-sub">Strategic Timeline Planner</h3>
+
+      <div class="grid-2">
+        <div class="input-card">
+          <label>Start Month</label>
+          <input id="phaseStart" type="number">
+        </div>
+
+        <div class="input-card">
+          <label>End Month</label>
+          <input id="phaseEnd" type="number">
+        </div>
+
+        <div class="input-card">
+          <label>Extra Marketing</label>
+          <input id="phaseMarketing" type="number">
+        </div>
+
+        <div class="input-card">
+          <label>Seasonal Boost %</label>
+          <input id="phaseBoost" type="number">
+        </div>
+
+        <div class="input-card">
+          <label>Extra Fixed Cost</label>
+          <input id="phaseFixed" type="number">
+        </div>
+      </div>
+
+      <button id="addPhase" class="small-btn">Add Strategy Phase</button>
+      <ul id="phaseList"></ul>
+
+      <button id="saveConfig" class="primary-btn">Save Business Config</button>
+
+    </section>
+
+
+    <!-- ================= BANK LOANS ================= -->
+
+    <section class="data-card">
+      <h2>Bank Loans</h2>
+
+      <div class="grid-2">
+        <input id="bankName" placeholder="Bank Name">
+        <input id="bankPrincipal" type="number" placeholder="Principal">
+        <input id="bankRate" type="number" placeholder="Annual %">
+        <input id="bankEMI" type="number" placeholder="EMI">
+      </div>
+
+      <button id="addBank" class="small-btn">Add Bank Loan</button>
+      <ul id="bankList"></ul>
+    </section>
+
+
+    <!-- ================= PRIVATE INVESTORS ================= -->
+
+    <section class="data-card">
+      <h2>Private Investors</h2>
+
+      <div class="grid-2">
+        <input id="invName" placeholder="Investor Name">
+        <input id="invPrincipal" type="number" placeholder="Principal">
+        <input id="invRate" type="number" placeholder="Monthly %">
+      </div>
+
+      <button id="addInvestor" class="small-btn">Add Investor</button>
+      <ul id="investorList"></ul>
+    </section>
+
+
+    <!-- ================= SIMULATION ================= -->
+
+    <section class="simulation-card">
+      <button id="runSimulation" class="primary-btn">
+        Run Simulation (36 Months)
+      </button>
+
+      <h2>Projection Output</h2>
+      <div id="output"></div>
+    </section>
 
   </div>
 
-  <h3 class="section-sub">Campaign Override</h3>
+  <!-- ================= SCRIPTS ================= -->
 
-  <div class="grid-2">
-    <div class="input-card">
-      <label>Month</label>
-      <input id="overrideMonth" type="number" placeholder="3">
-    </div>
+  <script type="module" src="./firebase.js"></script>
+  <script type="module" src="./main.js"></script>
 
-    <div class="input-card">
-      <label>Marketing Override</label>
-      <input id="overrideAmount" type="number" placeholder="400000">
-    </div>
-  </div>
-
-  <button id="addOverride" class="small-btn">Add Override</button>
-
-  <ul id="overrideList"></ul>
-
-  <button id="saveConfig" class="primary-btn">Save Business Config</button>
-
-</section>
-
-  <section>
-    <h2>Add Bank Loan</h2>
-    <input id="bankName" placeholder="Name">
-    <input id="bankPrincipal" type="number" placeholder="Principal">
-    <input id="bankRate" type="number" placeholder="Annual %">
-    <input id="bankEMI" type="number" placeholder="EMI">
-    <button id="addBank">Add Bank Loan</button>
-
-    <ul id="bankList"></ul>
-  </section>
-
-  <section>
-    <h2>Add Private Investor</h2>
-    <input id="invName" placeholder="Name">
-    <input id="invPrincipal" type="number" placeholder="Principal">
-    <input id="invRate" type="number" placeholder="Monthly %">
-    <button id="addInvestor">Add Investor</button>
-
-    <ul id="investorList"></ul>
-  </section>
-
-  <button id="runSimulation">Run Simulation</button>
-
-  <h2>Projection Output</h2>
-  <div id="output"></div>
-</div>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="main.js"></script>
-  
 </body>
 </html>

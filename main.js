@@ -22,6 +22,8 @@ import {
 
 let bankLoans = [];
 let privateInvestors = [];
+let strategyTimeline = [];
+const phaseList = document.getElementById("phaseList");
 let marketingOverrides = {};
 const overrideList = document.getElementById("overrideList");
 
@@ -300,26 +302,23 @@ function renderTable(data) {
 
 document.getElementById("runSimulation").addEventListener("click", () => {
 
-  const config = {
-    openingCash: Number(openingCash.value),
+const config = {
+  openingCash: Number(openingCash.value),
 
-    baseRevenue: Number(baseRevenue.value),
-    monthlyGrowthPercent: Number(growthPercent.value),
+  baseRevenue: Number(baseRevenue.value),
+  monthlyGrowthPercent: Number(growthPercent.value),
 
-    marketingPlan: {
-      defaultSpend: Number(marketingSpend.value),
-      custom: marketingOverrides
-    },
+  defaultMarketingSpend: Number(marketingSpend.value),
+  marketingROI: Number(marketingROI.value),
 
-    marketingROI: Number(marketingROI.value),
+  fixedExpenses: Number(fixedExpenses.value),
+  salary: Number(salary.value),
+  inventoryCostPercent: Number(inventoryPercent.value),
 
-    fixedExpenses: Number(fixedExpenses.value),
-    salary: Number(salary.value),
-    inventoryCostPercent: Number(inventoryPercent.value),
+  strategyTimeline: strategyTimeline,
 
-    months: 24
-  };
-
+  months: 36
+};
   const result = runProjection(
     structuredClone(bankLoans),
     structuredClone(privateInvestors),
@@ -363,4 +362,59 @@ function renderOverrides() {
 window.deleteOverride = function(month) {
   delete marketingOverrides[month];
   renderOverrides();
+};
+
+
+document.getElementById("addPhase").addEventListener("click", () => {
+
+  const phase = {
+    startMonth: Number(phaseStart.value),
+    endMonth: Number(phaseEnd.value),
+    extraMarketing: Number(phaseMarketing.value) || 0,
+    seasonalBoostPercent: Number(phaseBoost.value) || 0,
+    extraFixedCost: Number(phaseFixed.value) || 0
+  };
+
+  strategyTimeline.push(phase);
+  renderPhases();
+});
+
+function renderPhases() {
+  phaseList.innerHTML = "";
+
+  strategyTimeline.forEach((phase, index) => {
+    phaseList.innerHTML += `
+      <li>
+        M${phase.startMonth}–M${phase.endMonth}
+        | +₹${phase.extraMarketing}
+        | +${phase.seasonalBoostPercent}% boost
+        <button onclick="deletePhase(${index})">Remove</button>
+      </li>
+    `;
+  });
+}
+
+window.deletePhase = function(index) {
+  strategyTimeline.splice(index, 1);
+  renderPhases();
+};
+
+function renderPhases() {
+  phaseList.innerHTML = "";
+
+  strategyTimeline.forEach((phase, index) => {
+    phaseList.innerHTML += `
+      <li>
+        M${phase.startMonth}–M${phase.endMonth}
+        | +₹${phase.extraMarketing}
+        | +${phase.seasonalBoostPercent}%
+        <button onclick="deletePhase(${index})">Remove</button>
+      </li>
+    `;
+  });
+}
+
+window.deletePhase = function(index) {
+  strategyTimeline.splice(index, 1);
+  renderPhases();
 };

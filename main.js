@@ -404,3 +404,34 @@ window.deletePhase = function(index) {
   strategyTimeline.splice(index, 1);
   renderPhases();
 };
+
+/* ===============================
+   RESET BUSINESS CONFIG
+================================= */
+
+document.getElementById("resetConfig").addEventListener("click", () => {
+
+  // Clear all input fields
+  baseRevenue.value = "";
+  growthPercent.value = "";
+  marketingSpend.value = "";
+  marketingROI.value = "";
+  fixedExpenses.value = "";
+  salary.value = "";
+  inventoryPercent.value = "";
+  openingCash.value = "";
+
+  // Clear strategy timeline
+  strategyTimeline = [];
+  renderPhases();
+
+  // Clear dashboard
+  document.getElementById("dashFinalCash").innerText = "-";
+  document.getElementById("dashProfitMonth").innerText = "-";
+  document.getElementById("dashCollapseMonth").innerText = "-";
+  document.getElementById("dashMonths").innerText = "-";
+
+  // Clear output table
+  document.getElementById("output").innerHTML = "";
+
+});

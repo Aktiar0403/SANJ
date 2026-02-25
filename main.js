@@ -406,12 +406,70 @@ window.deletePhase = function(index) {
 };
 
 /* ===============================
-   RESET BUSINESS CONFIG
+   RESET CONFIG (Firestore + UI)
 ================================= */
 
-document.getElementById("resetConfig").addEventListener("click", () => {
+import { deleteDoc, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // Clear all input fields
+document.getElementById("resetConfig").addEventListener("click", async () => {
+
+  if (!confirm("Are you sure you want to delete Business Config?")) return;
+
+  await deleteDoc(doc(db, "config", "main"));
+
+  clearBusinessUI();
+
+  alert("Business Config Deleted");
+});
+
+
+/* ===============================
+   FULL SYSTEM RESET
+================================= */
+
+document.getElementById("fullReset").addEventListener("click", async () => {
+
+  const confirmText = prompt(
+    "Type DELETE to permanently remove ALL banks, investors & config"
+  );
+
+  if (confirmText !== "DELETE") {
+    alert("Cancelled");
+    return;
+  }
+
+  // Delete config
+  await deleteDoc(doc(db, "config", "main"));
+
+  // Delete all bank loans
+  const bankSnapshot = await getDocs(collection(db, "bankLoans"));
+  for (const docItem of bankSnapshot.docs) {
+    await deleteDoc(doc(db, "bankLoans", docItem.id));
+  }
+
+  // Delete all private investors
+  const invSnapshot = await getDocs(collection(db, "privateInvestors"));
+  for (const docItem of invSnapshot.docs) {
+    await deleteDoc(doc(db, "privateInvestors", docItem.id));
+  }
+
+  // Clear UI
+  clearBusinessUI();
+  bankLoans = [];
+  privateInvestors = [];
+  strategyTimeline = [];
+
+  renderBanks();
+  renderInvestors();
+  renderPhases();
+
+  document.getElementById("output").innerHTML = "";
+
+  alert("FULL RESET COMPLETED");
+});
+
+function clearBusinessUI() {
   baseRevenue.value = "";
   growthPercent.value = "";
   marketingSpend.value = "";
@@ -421,17 +479,11 @@ document.getElementById("resetConfig").addEventListener("click", () => {
   inventoryPercent.value = "";
   openingCash.value = "";
 
-  // Clear strategy timeline
   strategyTimeline = [];
   renderPhases();
 
-  // Clear dashboard
   document.getElementById("dashFinalCash").innerText = "-";
   document.getElementById("dashProfitMonth").innerText = "-";
   document.getElementById("dashCollapseMonth").innerText = "-";
   document.getElementById("dashMonths").innerText = "-";
-
-  // Clear output table
-  document.getElementById("output").innerHTML = "";
-
-});
+}

@@ -25,28 +25,63 @@
  <section>
   <h2>Business Model Configuration</h2>
 
-  <h3>Revenue Model</h3>
-  <input id="baseRevenue" type="number" placeholder="Base Revenue">
-  <input id="growthPercent" type="number" placeholder="Monthly Growth %">
+<section>
+  <h2>📊 Business Model Configuration</h2>
 
-  <h3>Marketing Model</h3>
-  <input id="marketingSpend" type="number" placeholder="Default Marketing Spend">
-  <input id="marketingROI" type="number" placeholder="Marketing ROI Multiplier">
+  <div class="config-group">
+    <h3>1️⃣ Base Revenue (Without Marketing Boost)</h3>
+    <p class="hint">Monthly revenue your company generates without new doctor investment.</p>
+    <input id="baseRevenue" type="number" placeholder="Example: 800000">
+  </div>
 
-  <h3>Campaign Override</h3>
-  <input id="overrideMonth" type="number" placeholder="Month Number">
-  <input id="overrideAmount" type="number" placeholder="Marketing Spend Override">
-  <button id="addOverride">Add Override</button>
+  <div class="config-group">
+    <h3>2️⃣ Monthly Organic Growth %</h3>
+    <p class="hint">Natural growth without extra marketing (brand growth, retention).</p>
+    <input id="growthPercent" type="number" placeholder="Example: 2">
+  </div>
 
-  <ul id="overrideList"></ul>
+  <div class="config-group">
+    <h3>3️⃣ Default Marketing Investment</h3>
+    <p class="hint">Monthly spend on doctors / performance marketing.</p>
+    <input id="marketingSpend" type="number" placeholder="Example: 200000">
+  </div>
 
-  <h3>Expense Model</h3>
-  <input id="fixedExpenses" type="number" placeholder="Fixed Expenses">
-  <input id="salary" type="number" placeholder="Salary">
-  <input id="inventoryPercent" type="number" placeholder="Inventory % of Revenue">
+  <div class="config-group">
+    <h3>4️⃣ Marketing ROI Multiplier</h3>
+    <p class="hint">If ROI = 3, then ₹1 spent generates ₹3 revenue.</p>
+    <input id="marketingROI" type="number" placeholder="Example: 3">
+  </div>
 
-  <h3>Cash</h3>
-  <input id="openingCash" type="number" placeholder="Opening Cash">
+  <div class="config-group">
+    <h3>5️⃣ Campaign Override (Optional)</h3>
+    <p class="hint">Increase or reduce marketing for specific months.</p>
+    <input id="overrideMonth" type="number" placeholder="Month Number (1-24)">
+    <input id="overrideAmount" type="number" placeholder="Marketing Spend For That Month">
+    <button id="addOverride">Add Override</button>
+    <ul id="overrideList"></ul>
+  </div>
+
+  <div class="config-group">
+    <h3>6️⃣ Fixed Business Costs</h3>
+    <p class="hint">Rent, utilities, admin, software, etc.</p>
+    <input id="fixedExpenses" type="number" placeholder="Example: 300000">
+  </div>
+
+  <div class="config-group">
+    <h3>7️⃣ Salary Expenses</h3>
+    <input id="salary" type="number" placeholder="Example: 200000">
+  </div>
+
+  <div class="config-group">
+    <h3>8️⃣ Inventory Cost % of Revenue</h3>
+    <p class="hint">Cost of goods sold. Example: 40%</p>
+    <input id="inventoryPercent" type="number" placeholder="Example: 40">
+  </div>
+
+  <div class="config-group">
+    <h3>9️⃣ Opening Cash</h3>
+    <input id="openingCash" type="number" placeholder="Example: 500000">
+  </div>
 
   <button id="saveConfig">Save Business Config</button>
 </section>

@@ -73,25 +73,58 @@ async function loadAllData() {
 ================================= */
 
 async function loadConfig() {
+
   const snap = await getDoc(doc(db, "config", "main"));
 
-  if (snap.exists()) {
-    const cfg = snap.data();
-    revenue.value = cfg.monthlyRevenue || 0;
-    expenses.value = cfg.monthlyExpenses || 0;
-    openingCash.value = cfg.openingCash || 0;
-  }
+  if (!snap.exists()) return;
+
+  const cfg = snap.data();
+
+  // Revenue model
+  baseRevenue.value = cfg.baseRevenue || 0;
+  growthPercent.value = cfg.monthlyGrowthPercent || 0;
+
+  // Marketing model
+  marketingSpend.value = cfg.marketingPlan?.defaultSpend || 0;
+  marketingROI.value = cfg.marketingROI || 0;
+
+  // Expense model
+  fixedExpenses.value = cfg.fixedExpenses || 0;
+  salary.value = cfg.salary || 0;
+  inventoryPercent.value = cfg.inventoryCostPercent || 0;
+
+  // Cash
+  openingCash.value = cfg.openingCash || 0;
+
+  // Marketing overrides
+  marketingOverrides = cfg.marketingPlan?.custom || {};
+  renderOverrides();
 }
 
 document.getElementById("saveConfig").addEventListener("click", async () => {
+
   const configData = {
-    monthlyRevenue: Number(revenue.value),
-    monthlyExpenses: Number(expenses.value),
     openingCash: Number(openingCash.value),
+
+    baseRevenue: Number(baseRevenue.value),
+    monthlyGrowthPercent: Number(growthPercent.value),
+
+    marketingPlan: {
+      defaultSpend: Number(marketingSpend.value),
+      custom: marketingOverrides
+    },
+
+    marketingROI: Number(marketingROI.value),
+
+    fixedExpenses: Number(fixedExpenses.value),
+    salary: Number(salary.value),
+    inventoryCostPercent: Number(inventoryPercent.value),
+
     updatedAt: new Date()
   };
 
   await setDoc(doc(db, "config", "main"), configData);
+
   alert("Business Config Saved");
 });
 

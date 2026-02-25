@@ -161,17 +161,35 @@ document.getElementById("addBank").addEventListener("click", async () => {
 });
 
 function renderBanks() {
+
   bankList.innerHTML = "";
 
-  bankLoans.forEach(bank => {
+  let totalEMI = 0;
+  let totalInterest = 0;
+
+  bankLoans.forEach(b => {
+
+    const monthlyInterest =
+      (b.principal * (b.annualRate / 100)) / 12;
+
+    totalEMI += b.emi;
+    totalInterest += monthlyInterest;
+
     bankList.innerHTML += `
       <li>
-        ${bank.name} - ₹${bank.principal}
-        <button onclick="editBank('${bank.id}')">Edit</button>
-        <button onclick="deleteBank('${bank.id}')">Delete</button>
+        ${b.name}
+        | Principal: ₹${b.principal}
+        | EMI: ₹${b.emi}
+        | Interest: ₹${Math.round(monthlyInterest)}
       </li>
     `;
   });
+
+  document.getElementById("bankTotalEMI").innerText =
+    Math.round(totalEMI);
+
+  document.getElementById("bankTotalInterest").innerText =
+    Math.round(totalInterest);
 }
 
 window.editBank = function(id) {
@@ -230,17 +248,34 @@ document.getElementById("addInvestor").addEventListener("click", async () => {
 });
 
 function renderInvestors() {
+
   investorList.innerHTML = "";
 
+  let totalInterest = 0;
+  let totalPaid = 0;
+
   privateInvestors.forEach(inv => {
+
+    const monthlyInterest =
+      inv.principal * (inv.monthlyRate / 100);
+
+    totalInterest += monthlyInterest;
+
     investorList.innerHTML += `
       <li>
-        ${inv.name} - ₹${inv.principal} @ ${inv.monthlyRate}%
-        <button onclick="editInvestor('${inv.id}')">Edit</button>
-        <button onclick="deleteInvestor('${inv.id}')">Delete</button>
+        ${inv.name}
+        | Principal: ₹${inv.principal}
+        | Rate: ${inv.monthlyRate}%
+        | Monthly Interest: ₹${Math.round(monthlyInterest)}
       </li>
     `;
   });
+
+  document.getElementById("privateTotalInterest").innerText =
+    Math.round(totalInterest);
+
+  document.getElementById("privateTotalPaid").innerText =
+    Math.round(totalPaid);
 }
 
 window.editInvestor = function(id) {

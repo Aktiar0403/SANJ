@@ -385,3 +385,23 @@ tr:nth-child(even) {
     visibility: visible;
   }
 }
+
+.section-summary {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  background: #1f2937;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.section-summary span {
+  display: block;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.section-summary strong {
+  color: #22c55e;
+}

@@ -35,22 +35,77 @@
       <div class="grid-2">
 
         <div class="input-card">
-          <label>Base Revenue</label>
+          <label>
+  Base Revenue
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Monthly revenue generated WITHOUT new marketing investment.
+      <br><br>
+      Example:
+      If doctors are already prescribing regularly and generating ₹8L monthly,
+      enter 800000 here.
+      <br><br>
+      Increasing this improves stability.
+      If too low, business depends heavily on marketing to survive.
+    </span>
+  </span>
+</label>
           <input id="baseRevenue" type="number" placeholder="800000">
         </div>
 
         <div class="input-card">
-          <label>Growth %</label>
+          <label>
+  Growth %
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Natural monthly growth rate without extra campaigns.
+      <br><br>
+      Example:
+      2% means revenue grows from ₹8L → ₹8.16L next month.
+      <br><br>
+      Higher growth reduces long-term debt pressure.
+    </span>
+  </span>
+</label>
           <input id="growthPercent" type="number" placeholder="2">
         </div>
 
         <div class="input-card">
-          <label>Default Marketing Spend</label>
+         <label>
+  Default Marketing Spend
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Monthly investment in doctors / performance marketing.
+      <br><br>
+      Example:
+      ₹2L monthly to maintain doctor relationships.
+      <br><br>
+      Cutting this reduces immediate expense,
+      but may collapse revenue later.
+    </span>
+  </span>
+</label>
           <input id="marketingSpend" type="number" placeholder="200000">
         </div>
 
         <div class="input-card">
-          <label>Marketing ROI</label>
+          <label>
+  Marketing ROI
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Revenue generated per ₹1 marketing spend.
+      <br><br>
+      ROI = 3 means ₹1 invested → ₹3 revenue.
+      <br><br>
+      If ROI < 1.5, marketing may destroy cash.
+      If ROI > 3, aggressive expansion is viable.
+    </span>
+  </span>
+</label>
           <input id="marketingROI" type="number" placeholder="3">
         </div>
 
@@ -65,12 +120,38 @@
         </div>
 
         <div class="input-card">
-          <label>Inventory %</label>
+         <label>
+  Inventory %
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Cost of goods sold as % of revenue.
+      <br><br>
+      Example:
+      If revenue = ₹10L and inventory % = 40,
+      then ₹4L goes to product cost.
+      <br><br>
+      Lower % improves margin and survival.
+    </span>
+  </span>
+</label>
           <input id="inventoryPercent" type="number" placeholder="40">
         </div>
 
         <div class="input-card">
-          <label>Opening Cash</label>
+         <label>
+  Opening Cash
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Cash available at start of simulation.
+      <br><br>
+      This is your survival buffer.
+      <br><br>
+      If too low, business collapses early even if profitable later.
+    </span>
+  </span>
+</label>
           <input id="openingCash" type="number" placeholder="500000">
         </div>
 
@@ -82,12 +163,38 @@
 
       <div class="grid-2">
         <div class="input-card">
-          <label>Start Month</label>
+          <label>
+  Start Month
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Month when strategy phase begins.
+      <br><br>
+      Example:
+      Start aggressive doctor campaign in Month 3.
+    </span>
+  </span>
+</label>
           <input id="phaseStart" type="number">
         </div>
 
         <div class="input-card">
-          <label>End Month</label>
+          <label>
+  Extra Marketing
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Additional marketing above default spend.
+      <br><br>
+      Example:
+      Default = ₹2L
+      Extra = ₹1L
+      Total = ₹3L during this phase.
+      <br><br>
+      Use to test aggressive growth strategy.
+    </span>
+  </span>
+</label>
           <input id="phaseEnd" type="number">
         </div>
 
@@ -97,12 +204,39 @@
         </div>
 
         <div class="input-card">
-          <label>Seasonal Boost %</label>
+          <label>
+  Seasonal Boost %
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Temporary revenue multiplier.
+      <br><br>
+      Example:
+      20% boost during winter medicine season.
+      <br><br>
+      Does NOT increase cost directly,
+      but increases inventory burden.
+    </span>
+  </span>
+</label>
           <input id="phaseBoost" type="number">
         </div>
 
         <div class="input-card">
-          <label>Extra Fixed Cost</label>
+         <label>
+  Extra Fixed Cost
+  <span class="tooltip-container">
+    <span class="tooltip-icon">?</span>
+    <span class="tooltip-text">
+      Additional operational cost during campaign.
+      <br><br>
+      Example:
+      Hiring extra sales reps or promotional events.
+      <br><br>
+      Reduces net benefit of campaign.
+    </span>
+  </span>
+</label>
           <input id="phaseFixed" type="number">
         </div>
       </div>

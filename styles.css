@@ -338,3 +338,50 @@ tr:nth-child(even) {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+  cursor: pointer;
+}
+
+.tooltip-icon {
+  background: #334155;
+  color: #fff;
+  font-size: 11px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 16px;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 260px;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  text-align: left;
+  border-radius: 8px;
+  padding: 10px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+}
+
+/* Mobile support */
+@media (hover: none) {
+  .tooltip-container:active .tooltip-text {
+    visibility: visible;
+  }
+}

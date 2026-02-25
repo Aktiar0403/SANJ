@@ -301,3 +301,40 @@ tr:nth-child(even) {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+.dashboard-card {
+  background: #111827;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dash-box {
+  background: #1f2937;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.dash-box span {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.dash-box h3 {
+  margin-top: 6px;
+  font-size: 18px;
+  color: #22c55e;
+}
+
+@media (min-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

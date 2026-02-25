@@ -262,6 +262,7 @@ function clearInvestorForm() {
   invRate.value = "";
 }
 function renderTable(data) {
+
   let html = `
     <table>
       <tr>
@@ -274,8 +275,25 @@ function renderTable(data) {
       </tr>
   `;
 
+  let collapseMonth = null;
+  let profitabilityMonth = null;
+  let lastCash = 0;
+  let totalMonths = 0;
+
   data.forEach(row => {
-    if (!row.month) return;
+
+    if (row.summary) {
+      profitabilityMonth = row.profitabilityMonth;
+      return;
+    }
+
+    if (row.message) {
+      collapseMonth = totalMonths;
+      return;
+    }
+
+    totalMonths++;
+    lastCash = row.cash;
 
     html += `
       <tr>
@@ -291,6 +309,19 @@ function renderTable(data) {
 
   html += "</table>";
   document.getElementById("output").innerHTML = html;
+
+  // Update dashboard
+  document.getElementById("dashFinalCash").innerText =
+    Math.round(lastCash);
+
+  document.getElementById("dashProfitMonth").innerText =
+    profitabilityMonth ? `Month ${profitabilityMonth}` : "Not Achieved";
+
+  document.getElementById("dashCollapseMonth").innerText =
+    collapseMonth ? `Month ${collapseMonth}` : "No Collapse";
+
+  document.getElementById("dashMonths").innerText =
+    totalMonths;
 }
 /* ===============================
    RUN SIMULATION

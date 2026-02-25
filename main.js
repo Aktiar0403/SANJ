@@ -26,7 +26,8 @@ let bankLoans = [];
 let privateInvestors = [];
 let strategyTimeline = [];
 const phaseList = document.getElementById("phaseList");
-
+let capitalInjections = [];
+const injectionList = document.getElementById("injectionList");
 
 let editingBankId = null;
 let editingInvestorId = null;
@@ -345,6 +346,7 @@ const config = {
   inventoryCostPercent: Number(inventoryPercent.value),
 
   strategyTimeline: strategyTimeline,
+  capitalInjections: capitalInjections,
 
   months: 36
 };
@@ -488,3 +490,36 @@ function clearBusinessUI() {
   document.getElementById("dashCollapseMonth").innerText = "-";
   document.getElementById("dashMonths").innerText = "-";
 }
+
+
+document.getElementById("addInjection").addEventListener("click", () => {
+
+  const injection = {
+    month: Number(injectMonth.value),
+    amount: Number(injectAmount.value)
+  };
+
+  capitalInjections.push(injection);
+  renderInjections();
+
+  injectMonth.value = "";
+  injectAmount.value = "";
+});
+
+function renderInjections() {
+  injectionList.innerHTML = "";
+
+  capitalInjections.forEach((inj, index) => {
+    injectionList.innerHTML += `
+      <li>
+        Month ${inj.month} → ₹${inj.amount}
+        <button onclick="deleteInjection(${index})">Remove</button>
+      </li>
+    `;
+  });
+}
+
+window.deleteInjection = function(index) {
+  capitalInjections.splice(index, 1);
+  renderInjections();
+};

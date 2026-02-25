@@ -73,7 +73,15 @@ export function runProjection(bankLoans, privateInvestors, config) {
     cash += totalRevenue;
     cash -= totalExpenses;
 
+/* =========================
+   CAPITAL INJECTION
+========================= */
 
+config.capitalInjections.forEach(inj => {
+  if (inj.month === month) {
+    cash += inj.amount;
+  }
+});
     /* =========================
        6️⃣ BANK LOANS
     ========================== */

@@ -284,7 +284,46 @@
 </button>
     </section>
 
+<h3 class="section-sub">Capital Injection Planner</h3>
 
+<div class="grid-2">
+  <div class="input-card">
+    <label>
+      Injection Month
+      <span class="tooltip-container">
+        <span class="tooltip-icon">?</span>
+        <span class="tooltip-text">
+          Month when external capital enters business.
+          <br><br>
+          Example:
+          If first investor tranche comes in Month 2,
+          enter 2.
+        </span>
+      </span>
+    </label>
+    <input id="injectMonth" type="number">
+  </div>
+
+  <div class="input-card">
+    <label>
+      Injection Amount
+      <span class="tooltip-container">
+        <span class="tooltip-icon">?</span>
+        <span class="tooltip-text">
+          Amount of capital injected.
+          <br><br>
+          Example:
+          ₹50,00,000 for first tranche.
+        </span>
+      </span>
+    </label>
+    <input id="injectAmount" type="number">
+  </div>
+</div>
+
+<button id="addInjection" class="small-btn">Add Injection Phase</button>
+
+<ul id="injectionList"></ul>
     <!-- ================= BANK LOANS ================= -->
 
     <section class="data-card">

@@ -16,6 +16,8 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
+
 /* ===============================
    GLOBAL STATE
 ================================= */
@@ -409,8 +411,7 @@ window.deletePhase = function(index) {
    RESET CONFIG (Firestore + UI)
 ================================= */
 
-import { deleteDoc, getDocs } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 document.getElementById("resetConfig").addEventListener("click", async () => {
 

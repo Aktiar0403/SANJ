@@ -22,68 +22,74 @@
 
   <h1>Capital Simulation Engine</h1>
 
- <section>
-  <h2>Business Model Configuration</h2>
+<section class="business-card">
 
-<section>
-  <h2>📊 Business Model Configuration</h2>
+  <h2>Business Model</h2>
 
-  <div class="config-group">
-    <h3>1️⃣ Base Revenue (Without Marketing Boost)</h3>
-    <p class="hint">Monthly revenue your company generates without new doctor investment.</p>
-    <input id="baseRevenue" type="number" placeholder="Example: 800000">
+  <div class="grid-2">
+
+    <div class="input-card">
+      <label>Base Revenue</label>
+      <input id="baseRevenue" type="number" placeholder="800000">
+    </div>
+
+    <div class="input-card">
+      <label>Growth %</label>
+      <input id="growthPercent" type="number" placeholder="2">
+    </div>
+
+    <div class="input-card">
+      <label>Marketing Spend</label>
+      <input id="marketingSpend" type="number" placeholder="200000">
+    </div>
+
+    <div class="input-card">
+      <label>Marketing ROI</label>
+      <input id="marketingROI" type="number" placeholder="3">
+    </div>
+
+    <div class="input-card">
+      <label>Fixed Expenses</label>
+      <input id="fixedExpenses" type="number" placeholder="300000">
+    </div>
+
+    <div class="input-card">
+      <label>Salary</label>
+      <input id="salary" type="number" placeholder="200000">
+    </div>
+
+    <div class="input-card">
+      <label>Inventory %</label>
+      <input id="inventoryPercent" type="number" placeholder="40">
+    </div>
+
+    <div class="input-card">
+      <label>Opening Cash</label>
+      <input id="openingCash" type="number" placeholder="500000">
+    </div>
+
   </div>
 
-  <div class="config-group">
-    <h3>2️⃣ Monthly Organic Growth %</h3>
-    <p class="hint">Natural growth without extra marketing (brand growth, retention).</p>
-    <input id="growthPercent" type="number" placeholder="Example: 2">
+  <h3 class="section-sub">Campaign Override</h3>
+
+  <div class="grid-2">
+    <div class="input-card">
+      <label>Month</label>
+      <input id="overrideMonth" type="number" placeholder="3">
+    </div>
+
+    <div class="input-card">
+      <label>Marketing Override</label>
+      <input id="overrideAmount" type="number" placeholder="400000">
+    </div>
   </div>
 
-  <div class="config-group">
-    <h3>3️⃣ Default Marketing Investment</h3>
-    <p class="hint">Monthly spend on doctors / performance marketing.</p>
-    <input id="marketingSpend" type="number" placeholder="Example: 200000">
-  </div>
+  <button id="addOverride" class="small-btn">Add Override</button>
 
-  <div class="config-group">
-    <h3>4️⃣ Marketing ROI Multiplier</h3>
-    <p class="hint">If ROI = 3, then ₹1 spent generates ₹3 revenue.</p>
-    <input id="marketingROI" type="number" placeholder="Example: 3">
-  </div>
+  <ul id="overrideList"></ul>
 
-  <div class="config-group">
-    <h3>5️⃣ Campaign Override (Optional)</h3>
-    <p class="hint">Increase or reduce marketing for specific months.</p>
-    <input id="overrideMonth" type="number" placeholder="Month Number (1-24)">
-    <input id="overrideAmount" type="number" placeholder="Marketing Spend For That Month">
-    <button id="addOverride">Add Override</button>
-    <ul id="overrideList"></ul>
-  </div>
+  <button id="saveConfig" class="primary-btn">Save Business Config</button>
 
-  <div class="config-group">
-    <h3>6️⃣ Fixed Business Costs</h3>
-    <p class="hint">Rent, utilities, admin, software, etc.</p>
-    <input id="fixedExpenses" type="number" placeholder="Example: 300000">
-  </div>
-
-  <div class="config-group">
-    <h3>7️⃣ Salary Expenses</h3>
-    <input id="salary" type="number" placeholder="Example: 200000">
-  </div>
-
-  <div class="config-group">
-    <h3>8️⃣ Inventory Cost % of Revenue</h3>
-    <p class="hint">Cost of goods sold. Example: 40%</p>
-    <input id="inventoryPercent" type="number" placeholder="Example: 40">
-  </div>
-
-  <div class="config-group">
-    <h3>9️⃣ Opening Cash</h3>
-    <input id="openingCash" type="number" placeholder="Example: 500000">
-  </div>
-
-  <button id="saveConfig">Save Business Config</button>
 </section>
 
   <section>

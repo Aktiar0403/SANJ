@@ -22,13 +22,34 @@
 
   <h1>Capital Simulation Engine</h1>
 
-  <section>
-    <h2>Business Config</h2>
-    <input id="revenue" type="number" placeholder="Monthly Revenue">
-    <input id="expenses" type="number" placeholder="Monthly Expenses">
-    <input id="openingCash" type="number" placeholder="Opening Cash">
-    <button id="saveConfig">Save Business Config</button>
-  </section>
+ <section>
+  <h2>Business Model Configuration</h2>
+
+  <h3>Revenue Model</h3>
+  <input id="baseRevenue" type="number" placeholder="Base Revenue">
+  <input id="growthPercent" type="number" placeholder="Monthly Growth %">
+
+  <h3>Marketing Model</h3>
+  <input id="marketingSpend" type="number" placeholder="Default Marketing Spend">
+  <input id="marketingROI" type="number" placeholder="Marketing ROI Multiplier">
+
+  <h3>Campaign Override</h3>
+  <input id="overrideMonth" type="number" placeholder="Month Number">
+  <input id="overrideAmount" type="number" placeholder="Marketing Spend Override">
+  <button id="addOverride">Add Override</button>
+
+  <ul id="overrideList"></ul>
+
+  <h3>Expense Model</h3>
+  <input id="fixedExpenses" type="number" placeholder="Fixed Expenses">
+  <input id="salary" type="number" placeholder="Salary">
+  <input id="inventoryPercent" type="number" placeholder="Inventory % of Revenue">
+
+  <h3>Cash</h3>
+  <input id="openingCash" type="number" placeholder="Opening Cash">
+
+  <button id="saveConfig">Save Business Config</button>
+</section>
 
   <section>
     <h2>Add Bank Loan</h2>

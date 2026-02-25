@@ -9,37 +9,45 @@ export function runProjection(bankLoans, privateInvestors, config) {
 
   for (let month = 1; month <= config.months; month++) {
 
-    /* =========================
-       1️⃣ REVENUE ENGINE
-    ========================== */
+   /* =========================
+   REVENUE ENGINE
+========================= */
 
-    const growthFactor =
-      1 + (config.monthlyGrowthPercent / 100);
+const growthFactor =
+  1 + (config.monthlyGrowthPercent / 100);
 
-    const baseRevenue =
-      config.baseRevenue * Math.pow(growthFactor, month - 1);
+const baseRevenue =
+  config.baseRevenue * Math.pow(growthFactor, month - 1);
 
-    const marketingRevenue =
-      config.marketingSpend * config.marketingROI;
+let marketingSpend =
+  config.marketingPlan.defaultSpend;
 
-    const totalRevenue =
-      baseRevenue + marketingRevenue;
+if (config.marketingPlan.custom[month]) {
+  marketingSpend =
+    config.marketingPlan.custom[month];
+}
 
+const marketingRevenue =
+  marketingSpend * config.marketingROI;
 
-    /* =========================
-       2️⃣ EXPENSE ENGINE
-    ========================== */
+const totalRevenue =
+  baseRevenue + marketingRevenue;
 
-    const inventoryCost =
-      totalRevenue * (config.inventoryCostPercent / 100);
+/* =========================
+   EXPENSE ENGINE
+========================= */
 
-    const totalExpenses =
-      config.fixedExpenses
-      + config.salary
-      + config.marketingSpend
-      + inventoryCost;
+const inventoryCost =
+  totalRevenue * (config.inventoryCostPercent / 100);
 
+const totalExpenses =
+  config.fixedExpenses
+  + config.salary
+  + marketingSpend
+  + inventoryCost;
 
+cash += totalRevenue;
+cash -= totalExpenses;
     /* =========================
        3️⃣ CASHFLOW BEFORE DEBT
     ========================== */
@@ -90,6 +98,7 @@ export function runProjection(bankLoans, privateInvestors, config) {
       bankInterest: bankData.totalInterest,
       privateInterest: privateData.totalInterest,
       privatePaid: privateData.totalPaid,
+      marketingSpend,
       inventoryCost,
       monthlyDeficit,
       tierBreakdown: privateData.tierSummary

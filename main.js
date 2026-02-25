@@ -22,6 +22,8 @@ import {
 
 let bankLoans = [];
 let privateInvestors = [];
+let marketingOverrides = {};
+const overrideList = document.getElementById("overrideList");
 
 let editingBankId = null;
 let editingInvestorId = null;
@@ -228,7 +230,37 @@ function clearInvestorForm() {
   invPrincipal.value = "";
   invRate.value = "";
 }
+function renderTable(data) {
+  let html = `
+    <table>
+      <tr>
+        <th>Month</th>
+        <th>Revenue</th>
+        <th>Expenses</th>
+        <th>Marketing</th>
+        <th>Cash</th>
+        <th>Deficit</th>
+      </tr>
+  `;
 
+  data.forEach(row => {
+    if (!row.month) return;
+
+    html += `
+      <tr>
+        <td>${row.month}</td>
+        <td>${Math.round(row.revenue)}</td>
+        <td>${Math.round(row.expenses)}</td>
+        <td>${Math.round(row.marketingSpend)}</td>
+        <td>${Math.round(row.cash)}</td>
+        <td>${Math.round(row.monthlyDeficit)}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+  document.getElementById("output").innerHTML = html;
+}
 /* ===============================
    RUN SIMULATION
 ================================= */
@@ -236,9 +268,22 @@ function clearInvestorForm() {
 document.getElementById("runSimulation").addEventListener("click", () => {
 
   const config = {
-    monthlyRevenue: Number(revenue.value),
-    monthlyExpenses: Number(expenses.value),
     openingCash: Number(openingCash.value),
+
+    baseRevenue: Number(baseRevenue.value),
+    monthlyGrowthPercent: Number(growthPercent.value),
+
+    marketingPlan: {
+      defaultSpend: Number(marketingSpend.value),
+      custom: marketingOverrides
+    },
+
+    marketingROI: Number(marketingROI.value),
+
+    fixedExpenses: Number(fixedExpenses.value),
+    salary: Number(salary.value),
+    inventoryCostPercent: Number(inventoryPercent.value),
+
     months: 24
   };
 
@@ -251,32 +296,38 @@ document.getElementById("runSimulation").addEventListener("click", () => {
   renderTable(result);
 });
 
-function renderTable(data) {
-  let html = `
-    <table>
-      <tr>
-        <th>Month</th>
-        <th>Cash</th>
-        <th>Bank EMI</th>
-        <th>Private Interest</th>
-        <th>Deficit</th>
-      </tr>
-  `;
+/* ===============================
+   MARKETING OVERRIDES
+================================= */
 
-  data.forEach(row => {
-    if (!row.month) return;
+document.getElementById("addOverride").addEventListener("click", () => {
 
-    html += `
-      <tr>
-        <td>${row.month}</td>
-        <td>${Math.round(row.cash)}</td>
-        <td>${Math.round(row.bankEMI)}</td>
-        <td>${Math.round(row.privateInterest)}</td>
-        <td>${Math.round(row.monthlyDeficit)}</td>
-      </tr>
+  const month = Number(overrideMonth.value);
+  const amount = Number(overrideAmount.value);
+
+  if (!month || !amount) return;
+
+  marketingOverrides[month] = amount;
+
+  renderOverrides();
+  overrideMonth.value = "";
+  overrideAmount.value = "";
+});
+
+function renderOverrides() {
+  overrideList.innerHTML = "";
+
+  Object.keys(marketingOverrides).forEach(month => {
+    overrideList.innerHTML += `
+      <li>
+        Month ${month} → ₹${marketingOverrides[month]}
+        <button onclick="deleteOverride(${month})">Remove</button>
+      </li>
     `;
   });
-
-  html += "</table>";
-  document.getElementById("output").innerHTML = html;
 }
+
+window.deleteOverride = function(month) {
+  delete marketingOverrides[month];
+  renderOverrides();
+};

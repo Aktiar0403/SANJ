@@ -1,6 +1,7 @@
 import { processBanks } from './bankEngine.js';
 import { processPrivateInvestors } from './privateEngine.js';
 import { updateCash } from './cashflowEngine.js';
+import { calculateMonthlyDeficit } from './analyticsEngine.js';
 
 export function runProjection(bankLoans, privateInvestors, config) {
 
@@ -20,13 +21,22 @@ export function runProjection(bankLoans, privateInvestors, config) {
     const privateData = processPrivateInvestors(privateInvestors, cash);
     cash = privateData.remainingCash;
 
+    const monthlyDeficit = calculateMonthlyDeficit(
+  config,
+  bankData.totalEMI,
+  privateData.totalInterest
+);
+
     history.push({
       month,
       cash,
       bankEMI: bankData.totalEMI,
       bankInterest: bankData.totalInterest,
       privateInterest: privateData.totalInterest,
-      privatePaid: privateData.totalPaid
+      privatePaid: privateData.totalPaid,
+        monthlyDeficit,
+tierBreakdown: privateData.tierSummary
+
     });
 
     if (cash < 0) {

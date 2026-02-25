@@ -1,6 +1,5 @@
 import { processBanks } from './bankEngine.js';
 import { processPrivateInvestors } from './privateEngine.js';
-import { updateCash } from './cashflowEngine.js';
 import { calculateMonthlyDeficit } from './analyticsEngine.js';
 
 export function runProjection(bankLoans, privateInvestors, config) {
@@ -10,37 +9,96 @@ export function runProjection(bankLoans, privateInvestors, config) {
 
   for (let month = 1; month <= config.months; month++) {
 
-    // Revenue & expenses
-    cash = updateCash(cash, config.monthlyRevenue, config.monthlyExpenses);
+    /* =========================
+       1️⃣ REVENUE ENGINE
+    ========================== */
 
-    // Bank processing
+    const growthFactor =
+      1 + (config.monthlyGrowthPercent / 100);
+
+    const baseRevenue =
+      config.baseRevenue * Math.pow(growthFactor, month - 1);
+
+    const marketingRevenue =
+      config.marketingSpend * config.marketingROI;
+
+    const totalRevenue =
+      baseRevenue + marketingRevenue;
+
+
+    /* =========================
+       2️⃣ EXPENSE ENGINE
+    ========================== */
+
+    const inventoryCost =
+      totalRevenue * (config.inventoryCostPercent / 100);
+
+    const totalExpenses =
+      config.fixedExpenses
+      + config.salary
+      + config.marketingSpend
+      + inventoryCost;
+
+
+    /* =========================
+       3️⃣ CASHFLOW BEFORE DEBT
+    ========================== */
+
+    cash += totalRevenue;
+    cash -= totalExpenses;
+
+
+    /* =========================
+       4️⃣ BANK LOANS
+    ========================== */
+
     const bankData = processBanks(bankLoans);
     cash -= bankData.totalEMI;
 
-    // Private processing
-    const privateData = processPrivateInvestors(privateInvestors, cash);
+
+    /* =========================
+       5️⃣ PRIVATE INVESTORS
+    ========================== */
+
+    const privateData =
+      processPrivateInvestors(privateInvestors, cash);
+
     cash = privateData.remainingCash;
 
-    const monthlyDeficit = calculateMonthlyDeficit(
-  config,
-  bankData.totalEMI,
-  privateData.totalInterest
-);
+
+    /* =========================
+       6️⃣ DEFICIT CALCULATION
+    ========================== */
+
+    const monthlyDeficit =
+      totalRevenue
+      - totalExpenses
+      - bankData.totalEMI
+      - privateData.totalInterest;
+
+
+    /* =========================
+       7️⃣ STORE SNAPSHOT
+    ========================== */
 
     history.push({
       month,
       cash,
+      revenue: totalRevenue,
+      expenses: totalExpenses,
       bankEMI: bankData.totalEMI,
       bankInterest: bankData.totalInterest,
       privateInterest: privateData.totalInterest,
       privatePaid: privateData.totalPaid,
-        monthlyDeficit,
-tierBreakdown: privateData.tierSummary
-
+      inventoryCost,
+      monthlyDeficit,
+      tierBreakdown: privateData.tierSummary
     });
 
     if (cash < 0) {
-      history.push({ message: "System Collapse: Cash Negative" });
+      history.push({
+        message: "⚠ SYSTEM COLLAPSE – Cash Turned Negative"
+      });
       break;
     }
   }

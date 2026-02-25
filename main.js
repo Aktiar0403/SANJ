@@ -24,8 +24,7 @@ let bankLoans = [];
 let privateInvestors = [];
 let strategyTimeline = [];
 const phaseList = document.getElementById("phaseList");
-let marketingOverrides = {};
-const overrideList = document.getElementById("overrideList");
+
 
 let editingBankId = null;
 let editingInvestorId = null;
@@ -82,15 +81,15 @@ async function loadConfig() {
 
   const cfg = snap.data();
 
-  // Revenue model
+  // Base revenue
   baseRevenue.value = cfg.baseRevenue || 0;
   growthPercent.value = cfg.monthlyGrowthPercent || 0;
 
-  // Marketing model
-  marketingSpend.value = cfg.marketingPlan?.defaultSpend || 0;
+  // Marketing
+  marketingSpend.value = cfg.defaultMarketingSpend || 0;
   marketingROI.value = cfg.marketingROI || 0;
 
-  // Expense model
+  // Expenses
   fixedExpenses.value = cfg.fixedExpenses || 0;
   salary.value = cfg.salary || 0;
   inventoryPercent.value = cfg.inventoryCostPercent || 0;
@@ -98,9 +97,9 @@ async function loadConfig() {
   // Cash
   openingCash.value = cfg.openingCash || 0;
 
-  // Marketing overrides
-  marketingOverrides = cfg.marketingPlan?.custom || {};
-  renderOverrides();
+  // Strategy timeline
+  strategyTimeline = cfg.strategyTimeline || [];
+  renderPhases();
 }
 
 document.getElementById("saveConfig").addEventListener("click", async () => {
@@ -111,16 +110,14 @@ document.getElementById("saveConfig").addEventListener("click", async () => {
     baseRevenue: Number(baseRevenue.value),
     monthlyGrowthPercent: Number(growthPercent.value),
 
-    marketingPlan: {
-      defaultSpend: Number(marketingSpend.value),
-      custom: marketingOverrides
-    },
-
+    defaultMarketingSpend: Number(marketingSpend.value),
     marketingROI: Number(marketingROI.value),
 
     fixedExpenses: Number(fixedExpenses.value),
     salary: Number(salary.value),
     inventoryCostPercent: Number(inventoryPercent.value),
+
+    strategyTimeline: strategyTimeline,
 
     updatedAt: new Date()
   };
@@ -129,7 +126,6 @@ document.getElementById("saveConfig").addEventListener("click", async () => {
 
   alert("Business Config Saved");
 });
-
 /* ===============================
    BANK LOANS
 ================================= */
@@ -332,37 +328,10 @@ const config = {
    MARKETING OVERRIDES
 ================================= */
 
-document.getElementById("addOverride").addEventListener("click", () => {
 
-  const month = Number(overrideMonth.value);
-  const amount = Number(overrideAmount.value);
 
-  if (!month || !amount) return;
 
-  marketingOverrides[month] = amount;
 
-  renderOverrides();
-  overrideMonth.value = "";
-  overrideAmount.value = "";
-});
-
-function renderOverrides() {
-  overrideList.innerHTML = "";
-
-  Object.keys(marketingOverrides).forEach(month => {
-    overrideList.innerHTML += `
-      <li>
-        Month ${month} → ₹${marketingOverrides[month]}
-        <button onclick="deleteOverride(${month})">Remove</button>
-      </li>
-    `;
-  });
-}
-
-window.deleteOverride = function(month) {
-  delete marketingOverrides[month];
-  renderOverrides();
-};
 
 
 document.getElementById("addPhase").addEventListener("click", () => {

@@ -2,23 +2,36 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   collection,
+  getDocs,
+  deleteDoc,
   doc,
   setDoc,
   addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =========================
-   🔐 YOUR FIREBASE CONFIG
+   🔐 FIREBASE CONFIG
 ========================= */
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT_ID"
+   apiKey: "AIzaSyBuv5n9ulb1zNEtcXVnR8Z0ITeh5eBycEs",
+  authDomain: "sanj-601ea.firebaseapp.com",
+  projectId: "sanj-601ea",
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* =========================
+   🧹 CLEAR COLLECTION
+========================= */
+
+async function clearCollection(name) {
+  const snapshot = await getDocs(collection(db, name));
+  for (const d of snapshot.docs) {
+    await deleteDoc(doc(db, name, d.id));
+  }
+}
 
 /* =========================
    🚀 SEED FUNCTION
@@ -26,7 +39,13 @@ const db = getFirestore(app);
 
 async function seed() {
 
-  console.log("Seeding started...");
+  console.log("Clearing old data...");
+
+  await clearCollection("loans");
+  await clearCollection("privateInvestors");
+  await clearCollection("capitalInjections");
+
+  console.log("Old data cleared.");
 
   /* =========================
      1️⃣ BUSINESS CONFIG
@@ -48,116 +67,71 @@ async function seed() {
   ========================== */
 
   const loans = [
-    {
-      name: "Lendingkart Business",
-      type: "business",
-      principal: 1100000,
-      annualRate: 22,
-      monthlyEMI: 88000
-    },
-    {
-      name: "HDFC Business Loan",
-      type: "business",
-      principal: 1600000,
-      annualRate: 16,
-      monthlyEMI: 72000
-    },
-    {
-      name: "Bajaj Business Loan",
-      type: "business",
-      principal: 1100000,
-      annualRate: 22,
-      monthlyEMI: 42000
-    },
-    {
-      name: "HDFC Personal Block",
-      type: "personal",
-      principal: 600000,
-      annualRate: 14,
-      monthlyEMI: 46000
-    },
-    {
-      name: "Bajaj Personal",
-      type: "personal",
-      principal: 600000,
-      annualRate: 18,
-      monthlyEMI: 30000
-    },
-    {
-      name: "FinanceCorp Personal",
-      type: "personal",
-      principal: 600000,
-      annualRate: 20,
-      monthlyEMI: 19000
-    }
+
+    // Business
+    { name: "Lendingkart Business", type: "business", principal: 1100000, annualRate: 22, monthlyEMI: 88000 },
+    { name: "HDFC Business Loan", type: "business", principal: 1600000, annualRate: 16, monthlyEMI: 72000 },
+    { name: "Bajaj Business Loan", type: "business", principal: 1100000, annualRate: 22, monthlyEMI: 42000 },
+
+    // Personal (used for business)
+    { name: "HDFC Personal Block", type: "personal", principal: 600000, annualRate: 14, monthlyEMI: 46000 },
+    { name: "Bajaj Personal", type: "personal", principal: 600000, annualRate: 18, monthlyEMI: 30000 },
+    { name: "FinanceCorp Personal", type: "personal", principal: 600000, annualRate: 20, monthlyEMI: 19000 }
+
   ];
 
   for (const loan of loans) {
     await addDoc(collection(db, "loans"), loan);
   }
 
+  /* =========================
+     3️⃣ PRIVATE INVESTORS
+  ========================== */
 
+  const privateInvestors = [
 
- /* =========================
-   PRIVATE INVESTORS (REAL CLASSIFIED)
-========================= */
+    // 🔴 PRESSURE
+    { name: "Raju Da", principal: 900000, monthlyRate: 0, category: "pressure" },
+    { name: "Sual", principal: 1500000, monthlyRate: 3, category: "pressure" },
+    { name: "Bappon BIL", principal: 700000, monthlyRate: 0, category: "pressure" },
+    { name: "Amit", principal: 1000000, monthlyRate: 2, category: "pressure" },
 
-const privateInvestors = [
+    // 🟢 LOCKED
+    { name: "Father in Law", principal: 600000, monthlyRate: 4, category: "locked" },
+    { name: "Munna Sister", principal: 400000, monthlyRate: 3, category: "locked" },
+    { name: "Bappon", principal: 1900000, monthlyRate: 2.1, category: "locked" },
+    { name: "Munna", principal: 5100000, monthlyRate: 1.18, category: "locked" },
 
-  // 🔴 PRESSURE
-  { name: "Raju Da", principal: 900000, monthlyRate: 0, category: "pressure" },
-  { name: "Sual", principal: 1500000, monthlyRate: 3, category: "pressure" },
-  { name: "Bappon BIL", principal: 700000, monthlyRate: 0, category: "pressure" },
-  { name: "Amit", principal: 1000000, monthlyRate: 2, category: "pressure" },
+    // ⚫ NEGOTIABLE
+    { name: "Titu", principal: 200000, monthlyRate: 4, category: "negotiable" },
+    { name: "Uncle (3.5)", principal: 350000, monthlyRate: 3.43, category: "negotiable" },
+    { name: "Sultan", principal: 1500000, monthlyRate: 4, category: "negotiable" },
+    { name: "Father", principal: 600000, monthlyRate: 2, category: "negotiable" },
+    { name: "Uncle (20)", principal: 2000000, monthlyRate: 2, category: "negotiable" },
+    { name: "Shaim", principal: 900000, monthlyRate: 2.44, category: "negotiable" },
+    { name: "Raushan", principal: 1900000, monthlyRate: 0, category: "negotiable" }
 
-  // 🟢 LOCKED (Stable)
-  { name: "Father in Law", principal: 600000, monthlyRate: 4, category: "locked" },
-  { name: "Munna Sister", principal: 400000, monthlyRate: 3, category: "locked" },
-  { name: "Bappon", principal: 1900000, monthlyRate: 2.1, category: "locked" },
-  { name: "Munna", principal: 5100000, monthlyRate: 1.18, category: "locked" },
+  ];
 
-  // ⚫ NEGOTIABLE
-  { name: "Titu", principal: 200000, monthlyRate: 4, category: "negotiable" },
-  { name: "Uncle (3.5)", principal: 350000, monthlyRate: 3.43, category: "negotiable" },
-  { name: "Sultan", principal: 1500000, monthlyRate: 4, category: "negotiable" },
-  { name: "Father", principal: 600000, monthlyRate: 2, category: "negotiable" },
-  { name: "Uncle (20)", principal: 2000000, monthlyRate: 2, category: "negotiable" },
-  { name: "Shaim", principal: 900000, monthlyRate: 2.44, category: "negotiable" },
-  { name: "Raushan", principal: 1900000, monthlyRate: 0, category: "negotiable" }
-
-];
-
-for (const inv of privateInvestors) {
-  await addDoc(collection(db, "privateInvestors"), inv);
-}
+  for (const inv of privateInvestors) {
+    await addDoc(collection(db, "privateInvestors"), inv);
+  }
 
   /* =========================
      4️⃣ CAPITAL INJECTIONS
   ========================== */
 
   const injections = [
-    {
-      month: 2,
-      amount: 5000000,
-      privatePercent: 70,
-      bankPercent: 20,
-      bufferPercent: 10
-    },
-    {
-      month: 6,
-      amount: 5000000,
-      privatePercent: 70,
-      bankPercent: 20,
-      bufferPercent: 10
-    }
+    { month: 2, amount: 5000000, privatePercent: 70, bankPercent: 20, bufferPercent: 10 },
+    { month: 6, amount: 5000000, privatePercent: 70, bankPercent: 20, bufferPercent: 10 }
   ];
 
   for (const inj of injections) {
     await addDoc(collection(db, "capitalInjections"), inj);
   }
 
-  console.log("Seeding complete ✅");
-  alert("Firestore seeded successfully!");
+  console.log("✅ SEEDING COMPLETE");
+  alert("Firestore successfully seeded!");
 }
 
 seed();

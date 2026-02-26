@@ -1,423 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Capital Simulation Engine</title>
+  <title>SANJ Capital Strategy Simulator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:,">
 </head>
-
 <body>
 
-  <!-- ================= LOGIN ================= -->
+<h1>Capital Restructuring Simulator</h1>
 
-  <div id="loginSection" class="auth-card">
-    <h2>Login</h2>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="loginBtn" class="primary-btn">Login</button>
+<section class="card">
+  <h2>Business Model</h2>
+  <div class="grid">
+    <input id="startDate" type="month" value="2026-03">
+    <input id="peakBilling" type="number" placeholder="Peak Billing (Mar–Sep)">
+    <input id="lowBilling" type="number" placeholder="Low Billing (Oct–Feb)">
+    <input id="doctorPercent" type="number" placeholder="Doctor %">
+    <input id="cogsPercent" type="number" placeholder="COGS %">
+    <input id="fixedExpenses" type="number" placeholder="Fixed Expenses">
+    <input id="salary" type="number" placeholder="Salary">
+    <input id="openingCash" type="number" placeholder="Opening Cash">
   </div>
-
-  <!-- ================= MAIN APP ================= -->
-
-  <div id="appSection" style="display:none;">
-
-    <h1>Capital Simulation Engine</h1>
-
-    <!-- ================= BUSINESS MODEL ================= -->
-
-    <section class="business-card">
-
-      <h2>Business Model</h2>
-
-      <div class="grid-2">
-
-        <div class="input-card">
-          <label>
-  Base Revenue
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Monthly revenue generated WITHOUT new marketing investment.
-      <br><br>
-      Example:
-      If doctors are already prescribing regularly and generating ₹8L monthly,
-      enter 800000 here.
-      <br><br>
-      Increasing this improves stability.
-      If too low, business depends heavily on marketing to survive.
-    </span>
-  </span>
-</label>
-          <input id="baseRevenue" type="number" placeholder="800000">
-        </div>
-
-        <div class="input-card">
-          <label>
-  Growth %
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Natural monthly growth rate without extra campaigns.
-      <br><br>
-      Example:
-      2% means revenue grows from ₹8L → ₹8.16L next month.
-      <br><br>
-      Higher growth reduces long-term debt pressure.
-    </span>
-  </span>
-</label>
-          <input id="growthPercent" type="number" placeholder="2">
-        </div>
-
-        <div class="input-card">
-         <label>
-  Default Marketing Spend
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Monthly investment in doctors / performance marketing.
-      <br><br>
-      Example:
-      ₹2L monthly to maintain doctor relationships.
-      <br><br>
-      Cutting this reduces immediate expense,
-      but may collapse revenue later.
-    </span>
-  </span>
-</label>
-          <input id="marketingSpend" type="number" placeholder="200000">
-        </div>
-
-        <div class="input-card">
-          <label>
-  Marketing ROI
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Revenue generated per ₹1 marketing spend.
-      <br><br>
-      ROI = 3 means ₹1 invested → ₹3 revenue.
-      <br><br>
-      If ROI < 1.5, marketing may destroy cash.
-      If ROI > 3, aggressive expansion is viable.
-    </span>
-  </span>
-</label>
-          <input id="marketingROI" type="number" placeholder="3">
-        </div>
-
-        <div class="input-card">
-          <label>
-  Fixed Expenses
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Monthly business costs that remain constant
-      regardless of revenue or marketing activity.
-      <br><br>
-
-      ✔ Include:
-      - Office rent
-      - Utilities
-      - Admin staff salaries (tax consultant fee etc)
-      - Basic logistics overhead
-      <br><br>
-
-      ❌ Do NOT include:
-      - Marketing spend (entered separately)
-      - Sales team salary (enter in Salary field)
-      - Inventory / product purchase cost (calculated automatically)
-      - Bank EMI or investor interest
-      <br><br>
-
-      Example:
-      If your office rent is ₹8K,
-      admin staff ₹1k,
-      utilities ₹1K,
-      total fixed = ₹10k.
-    </span>
-  </span>
-</label>
-          <input id="fixedExpenses" type="number" placeholder="300000">
-        </div>
-
-        <div class="input-card">
-          <label>Salary</label>
-          <input id="salary" type="number" placeholder="200000">
-        </div>
-
-        <div class="input-card">
-         <label>
-  Inventory %
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Cost of goods sold as % of revenue.
-      <br><br>
-      Example:
-      If revenue = ₹10L and inventory % = 40,
-      then ₹4L goes to product cost.
-      <br><br>
-      Lower % improves margin and survival.
-    </span>
-  </span>
-</label>
-          <input id="inventoryPercent" type="number" placeholder="40">
-        </div>
-
-        <div class="input-card">
-         <label>
-  Opening Cash
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Cash available at start of simulation.
-      <br><br>
-      This is your survival buffer.
-      <br><br>
-      If too low, business collapses early even if profitable later.
-    </span>
-  </span>
-</label>
-          <input id="openingCash" type="number" placeholder="500000">
-        </div>
-
-      </div>
-
-      <!-- ================= STRATEGY TIMELINE ================= -->
-
-      <h3 class="section-sub">Strategic Timeline Planner</h3>
-
-      <div class="grid-2">
-        <div class="input-card">
-          <label>
-  Start Month
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Month when strategy phase begins.
-      <br><br>
-      Example:
-      Start aggressive doctor campaign in Month 3.
-    </span>
-  </span>
-</label>
-          <input id="phaseStart" type="number">
-        </div>
-
-        <div class="input-card">
-          <label>
-  Extra Marketing
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Additional marketing above default spend.
-      <br><br>
-      Example:
-      Default = ₹2L
-      Extra = ₹1L
-      Total = ₹3L during this phase.
-      <br><br>
-      Use to test aggressive growth strategy.
-    </span>
-  </span>
-</label>
-          <input id="phaseEnd" type="number">
-        </div>
-
-        <div class="input-card">
-          <label>Extra Marketing</label>
-          <input id="phaseMarketing" type="number">
-        </div>
-
-        <div class="input-card">
-          <label>
-  Seasonal Boost %
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Temporary revenue multiplier.
-      <br><br>
-      Example:
-      20% boost during winter medicine season.
-      <br><br>
-      Does NOT increase cost directly,
-      but increases inventory burden.
-    </span>
-  </span>
-</label>
-          <input id="phaseBoost" type="number">
-        </div>
-
-        <div class="input-card">
-         <label>
-  Extra Fixed Cost
-  <span class="tooltip-container">
-    <span class="tooltip-icon">?</span>
-    <span class="tooltip-text">
-      Additional operational cost during campaign.
-      <br><br>
-      Example:
-      Hiring extra sales reps or promotional events.
-      <br><br>
-      Reduces net benefit of campaign.
-    </span>
-  </span>
-</label>
-          <input id="phaseFixed" type="number">
-        </div>
-      </div>
-
-      <button id="addPhase" class="small-btn">Add Strategy Phase</button>
-      <ul id="phaseList"></ul>
-
-      <button id="saveConfig" class="primary-btn">Save Business Config</button>
-<button id="resetConfig" class="small-btn" style="background:#f97316;">
-  Reset Config (Local + Firestore)
-</button>
-
-<button id="fullReset" class="small-btn" style="background:#dc2626;">
-  FULL RESET (Delete Everything)
-</button>
-    </section>
-
-<h3 class="section-sub">Capital Injection Planner</h3>
-
-<div class="grid-2">
-  <div class="input-card">
-    <label>Injection Month</label>
-    <input id="injectMonth" type="number">
-  </div>
-
-  <div class="input-card">
-    <label>Injection Amount</label>
-    <input id="injectAmount" type="number">
-  </div>
-
-  <div class="input-card">
-    <label>% to Bank Repayment</label>
-    <input id="injectBankPercent" type="number">
-  </div>
-
-  <div class="input-card">
-    <label>% to Private Repayment</label>
-    <input id="injectPrivatePercent" type="number">
-  </div>
-
-  <div class="input-card">
-    <label>% to Buffer</label>
-    <input id="injectBufferPercent" type="number">
-  </div>
-
-  <div class="input-card">
-    <label>% to Growth Expansion</label>
-    <input id="injectGrowthPercent" type="number">
-  </div>
-</div>
-
-<button id="addInjection" class="small-btn">Add Injection Phase</button>
-<ul id="injectionList"></ul>
-    <!-- ================= BANK LOANS ================= -->
-
-    <section class="data-card">
-      <h2>Bank Loans</h2>
-
-      <div class="grid-2">
-        <input id="bankName" placeholder="Bank Name">
-        <input id="bankPrincipal" type="number" placeholder="Principal">
-        <input id="bankRate" type="number" placeholder="Annual %">
-        <input id="bankEMI" type="number" placeholder="EMI">
-      </div>
-
-      <button id="addBank" class="small-btn">Add Bank Loan</button>
-      <ul id="bankList"></ul>
-      <div class="section-summary">
-  <div>
-    <span>Total Monthly EMI</span>
-    <strong id="bankTotalEMI">0</strong>
-  </div>
-  <div>
-    <span>Total Monthly Interest</span>
-    <strong id="bankTotalInterest">0</strong>
-  </div>
-</div>
-    </section>
-
-
-    <!-- ================= PRIVATE INVESTORS ================= -->
-
-    <section class="data-card">
-      <h2>Private Investors</h2>
-
-      <div class="grid-2">
-        <input id="invName" placeholder="Investor Name">
-        <input id="invPrincipal" type="number" placeholder="Principal">
-        <input id="invRate" type="number" placeholder="Monthly %">
-      </div>
-
-      <button id="addInvestor" class="small-btn">Add Investor</button>
-      <ul id="investorList"></ul>
-      <div class="section-summary">
-  <div>
-    <span>Total Monthly Interest</span>
-    <strong id="privateTotalInterest">0</strong>
-  </div>
-  <div>
-    <span>Total Paid This Month</span>
-    <strong id="privateTotalPaid">0</strong>
-  </div>
-</div>
-    </section>
-
-
-    <!-- ================= SIMULATION ================= -->
-
-    <section class="simulation-card">
-      <button id="runSimulation" class="primary-btn">
-        Run Simulation (36 Months)
-      </button>
-
-      <section class="dashboard-card">
-
-  <h2>Simulation Dashboard</h2>
-
-  <div class="dashboard-grid">
-    <div class="dash-box">
-      <span>Final Cash</span>
-      <h3 id="dashFinalCash">-</h3>
-    </div>
-
-    <div class="dash-box">
-      <span>First Profitable Month</span>
-      <h3 id="dashProfitMonth">-</h3>
-    </div>
-
-    <div class="dash-box">
-      <span>Collapse Month</span>
-      <h3 id="dashCollapseMonth">-</h3>
-    </div>
-
-    <div class="dash-box">
-      <span>Total Months Simulated</span>
-      <h3 id="dashMonths">-</h3>
-    </div>
-  </div>
-
 </section>
 
-<h2>Projection Output</h2>
-<div id="output"></div>
-    </section>
+<section class="card">
+  <h2>Bank</h2>
+  <input id="bankPrincipal" type="number" placeholder="Bank Principal">
+  <input id="bankEMI" type="number" placeholder="Monthly EMI">
+</section>
 
+<section class="card">
+  <h2>Private Investors</h2>
+  <div class="grid">
+    <input id="invName" placeholder="Name">
+    <input id="invPrincipal" type="number" placeholder="Principal">
+    <input id="invRate" type="number" placeholder="Monthly %">
+    <select id="invType">
+      <option value="flexible">Flexible</option>
+      <option value="locked">Locked</option>
+      <option value="partial">Partial</option>
+    </select>
+    <input id="invMinLocked" type="number" placeholder="Min Locked Principal">
   </div>
+  <button id="addInvestor">Add</button>
+  <div id="investorList"></div>
+</section>
 
-  <!-- ================= SCRIPTS ================= -->
+<section class="card">
+  <h2>Capital Injection</h2>
+  <div class="grid">
+    <input id="injectMonth" type="number" placeholder="Month No">
+    <input id="injectAmount" type="number" placeholder="Amount">
+    <input id="injectPrivatePercent" type="number" placeholder="% Private">
+    <input id="injectBankPercent" type="number" placeholder="% Bank">
+    <input id="injectBufferPercent" type="number" placeholder="% Buffer">
+  </div>
+  <button id="addInjection">Add Injection</button>
+  <div id="injectionList"></div>
+</section>
 
-  <script type="module" src="./firebase.js"></script>
-  <script type="module" src="./main.js"></script>
+<button id="runSim">Run 36 Month Simulation</button>
 
+<section class="card">
+  <h2>Dashboard</h2>
+  <div id="dashboard"></div>
+</section>
+
+<script type="module" src="main.js"></script>
 </body>
 </html>

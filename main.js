@@ -4,7 +4,9 @@ import {
   getDocs,
   doc,
   getDoc
-} from "./firebase.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
 
 /* =========================
    📅 Month Label Generator

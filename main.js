@@ -120,33 +120,8 @@ function applyInjection(
   return cash;
 }
 
-/* ---- Calendar Month ---- */
 
-const date = new Date(config.startDate);
-date.setMonth(date.getMonth() + m);
 
-const monthNum = date.getMonth() + 1; // 1–12
-
-/* ---- Revenue Override Check ---- */
-
-let billing;
-
-const override = revenueOverrides.find(o => o.month === (m + 1));
-
-if (override) {
-
-  billing = override.billing;
-
-} else {
-
-  // Seasonal logic
-  if (monthNum >= 3 && monthNum <= 9) {
-    billing = config.peakBilling;
-  } else {
-    billing = config.lowBilling;
-  }
-
-}
 
 
 async function loadLoansUI() {

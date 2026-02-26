@@ -1,14 +1,25 @@
-export function processDebt(bank, privateInvestors) {
+export function processDebt(bankLoans, personalLoans, privateInvestors) {
 
-  let privateInterest = 0;
+  let totalBankEMI = 0;
+  let totalPersonalEMI = 0;
+  let totalPrivateInterest = 0;
+
+  bankLoans.forEach(b => {
+    totalBankEMI += b.monthlyEMI;
+  });
+
+  personalLoans.forEach(p => {
+    totalPersonalEMI += p.monthlyEMI;
+  });
 
   privateInvestors.forEach(inv => {
-    privateInterest +=
+    totalPrivateInterest +=
       inv.principal * (inv.monthlyRate / 100);
   });
 
   return {
-    bankEMI: bank.monthlyEMI,
-    privateInterest
+    totalBankEMI,
+    totalPersonalEMI,
+    totalPrivateInterest
   };
 }

@@ -28,3 +28,14 @@ button {
   margin-top: 10px;
   cursor: pointer;
 }
+
+.card-item {
+  background: #0f172a;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #334155;
+}
+.card-item button {
+  margin-right: 5px;
+}

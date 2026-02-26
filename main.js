@@ -6,6 +6,10 @@ import {
   getDoc
 } from "./firebase.js";
 
+
+let revenueOverrides = [];
+
+
 /* =========================
    📅 Month Label Generator
 ========================= */
@@ -115,6 +119,110 @@ function applyInjection(
 
   return cash;
 }
+
+let billing;
+
+const override = revenueOverrides.find(o => o.month === (m + 1));
+
+if (override) {
+  billing = override.billing;
+} else {
+  if (monthNum >= 3 && monthNum <= 9)
+    billing = config.peakBilling;
+  else
+    billing = config.lowBilling;
+}
+
+
+async function loadLoansUI() {
+
+  const snap = await getDocs(collection(db, "loans"));
+  const loans = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const container = document.getElementById("loanCards");
+
+  container.innerHTML = loans.map(l => `
+    <div class="card-item">
+      <strong>${l.name}</strong> (${l.type})
+      <br>
+      Principal: ₹${l.principal}
+      <br>
+      EMI: ₹${l.monthlyEMI}
+      <br>
+      <button onclick="editLoan('${l.id}', ${l.principal}, ${l.monthlyEMI})">
+        Edit
+      </button>
+    </div>
+  `).join("");
+}
+
+
+window.editLoan = async function(id, principal, emi) {
+
+  const newPrincipal = prompt("New Principal", principal);
+  const newEMI = prompt("New EMI", emi);
+
+  if (!newPrincipal || !newEMI) return;
+
+  await setDoc(doc(db, "loans", id), {
+    principal: Number(newPrincipal),
+    monthlyEMI: Number(newEMI)
+  }, { merge: true });
+
+  loadLoansUI();
+};
+
+async function loadPrivateUI() {
+
+  const snap = await getDocs(collection(db, "privateInvestors"));
+  const investors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const container = document.getElementById("privateCards");
+
+  container.innerHTML = investors.map(inv => `
+    <div class="card-item">
+      <strong>${inv.name}</strong>
+      <br>
+      Category: ${inv.category}
+      <br>
+      Principal: ₹${inv.principal}
+      <br>
+      Monthly Rate: ${inv.monthlyRate}%
+      <br>
+      <button onclick="editPrivate('${inv.id}', ${inv.principal}, ${inv.monthlyRate})">
+        Adjust
+      </button>
+      <button onclick="skipInterest('${inv.id}')">
+        Skip Interest
+      </button>
+    </div>
+  `).join("");
+}
+
+window.editPrivate = async function(id, principal, rate) {
+
+  const newPrincipal = prompt("New Principal", principal);
+  const newRate = prompt("New Monthly %", rate);
+
+  if (!newPrincipal || !newRate) return;
+
+  await setDoc(doc(db, "privateInvestors", id), {
+    principal: Number(newPrincipal),
+    monthlyRate: Number(newRate)
+  }, { merge: true });
+
+  loadPrivateUI();
+};
+
+window.skipInterest = async function(id) {
+
+  await setDoc(doc(db, "privateInvestors", id), {
+    monthlyRate: 0
+  }, { merge: true });
+
+  loadPrivateUI();
+};
+
 
 /* =========================
    🚀 RUN SIMULATION
@@ -259,9 +367,32 @@ function renderDashboard(data) {
     `).join("");
 }
 
+function renderOverrides() {
+
+  const container = document.getElementById("overrideList");
+
+  container.innerHTML = revenueOverrides.map(o => `
+    <div class="card-item">
+      Month ${o.month}
+      → Billing ₹${o.billing}
+    </div>
+  `).join("");
+}
+
 /* =========================
    🎬 BUTTON BIND
 ========================= */
 
 document.getElementById("runSim")
   .addEventListener("click", runSimulation);
+
+  document.getElementById("addRevenueOverride")
+  .addEventListener("click", () => {
+
+    revenueOverrides.push({
+      month: Number(overrideMonthNumber.value),
+      billing: Number(overrideRevenue.value)
+    });
+
+    renderOverrides();
+});

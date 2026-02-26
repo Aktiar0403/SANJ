@@ -245,55 +245,64 @@ window.skipInterest = async function(id) {
 
 async function runSimulation() {
 
-  /* ---- Load Business Config ---- */
-
+  /* 1️⃣ Load Config */
   const configSnap =
     await getDoc(doc(db, "businessConfig", "main"));
 
   const config = configSnap.data();
 
-  /* ---- Load Loans ---- */
-
+  /* 2️⃣ Load Loans */
   const loansSnap =
     await getDocs(collection(db, "loans"));
 
   const loans =
     loansSnap.docs.map(d => ({ ...d.data() }));
 
-  /* ---- Load Private Investors ---- */
-
+  /* 3️⃣ Load Private */
   const invSnap =
     await getDocs(collection(db, "privateInvestors"));
 
   const privateInvestors =
     invSnap.docs.map(d => ({ ...d.data() }));
 
-  /* ---- Load Injections ---- */
-
+  /* 4️⃣ Load Injections */
   const injSnap =
     await getDocs(collection(db, "capitalInjections"));
 
   const injections =
     injSnap.docs.map(d => d.data());
 
-  /* ---- Simulation Loop ---- */
-
   let cash = config.openingCash;
   let history = [];
 
+  /* =========================
+     🔁 SIMULATION LOOP
+  ========================== */
+
   for (let m = 0; m < 36; m++) {
+
+    /* ---- Calendar Month ---- */
 
     const date = new Date(config.startDate);
     date.setMonth(date.getMonth() + m);
 
     const monthNum = date.getMonth() + 1;
 
+    /* ---- Billing Logic ---- */
+
     let billing;
 
-    if (monthNum >= 3 && monthNum <= 9)
-      billing = config.peakBilling;
-    else
-      billing = config.lowBilling;
+    const override =
+      revenueOverrides.find(o => o.month === (m + 1));
+
+    if (override) {
+      billing = override.billing;
+    } else {
+      if (monthNum >= 3 && monthNum <= 9)
+        billing = config.peakBilling;
+      else
+        billing = config.lowBilling;
+    }
 
     /* ---- Business Core ---- */
 
@@ -313,19 +322,23 @@ async function runSimulation() {
 
     cash += operating;
 
-    /* ---- Debt ---- */
+    /* ---- Loans ---- */
 
-    const totalLoanEMI =
-      processLoans(loans);
-
-    const totalPrivateInterest =
-      processPrivateInterest(privateInvestors);
-
+    let totalLoanEMI = 0;
+    loans.forEach(l => totalLoanEMI += l.monthlyEMI);
     cash -= totalLoanEMI;
+
+    /* ---- Private ---- */
+
+    let totalPrivateInterest = 0;
+    privateInvestors.forEach(inv => {
+      totalPrivateInterest +=
+        inv.principal * (inv.monthlyRate / 100);
+    });
+
     cash -= totalPrivateInterest;
 
     /* ---- Injection ---- */
-
     cash = applyInjection(
       m + 1,
       injections,
@@ -337,9 +350,7 @@ async function runSimulation() {
     history.push({
       label: getMonthLabel(config.startDate, m),
       billing,
-      cash,
-      totalLoanEMI,
-      totalPrivateInterest
+      cash
     });
 
     if (cash < 0) {

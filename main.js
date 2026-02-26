@@ -397,3 +397,8 @@ document.getElementById("runSim")
 
     renderOverrides();
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadLoansUI();
+  loadPrivateUI();
+});

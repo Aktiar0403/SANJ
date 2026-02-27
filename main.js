@@ -9,9 +9,7 @@ import {
   deleteDoc
 } from "./firebase.js";
 
-
-let revenueOverrides = [];
-
+import { applyInjection } from "./injectionEngine.js";
 
 /* =========================
    📅 Month Label Generator
@@ -27,153 +25,43 @@ function getMonthLabel(startDate, offset) {
 }
 
 /* =========================
-   🏦 Process Loans
+   📊 DASHBOARD RENDER
 ========================= */
 
-function processLoans(loans) {
-  let totalEMI = 0;
-  loans.forEach(l => {
-    totalEMI += Number(l.monthlyEMI || 0);
-  });
-  return totalEMI;
+function renderDashboard(data) {
+  const container = document.getElementById("dashboard");
+  if (!container) return;
+
+  container.innerHTML = data.map(row => `
+    <div style="padding:8px;border-bottom:1px solid #334155;">
+      <strong>${row.label}</strong><br>
+      Billing: ₹${Math.round(row.billing || 0)}<br>
+      EMI: ₹${Math.round(row.totalLoanEMI || 0)}<br>
+      Private Interest: ₹${Math.round(row.totalPrivateInterest || 0)}<br>
+      Cash: ₹${Math.round(row.cash || 0)}
+    </div>
+  `).join("");
 }
 
 /* =========================
-   💰 Process Private Interest
+   💉 LOAD INJECTIONS UI
 ========================= */
-
-function processPrivateInterest(privateInvestors) {
-  let total = 0;
-  privateInvestors.forEach(inv => {
-    total += inv.principal * (inv.monthlyRate / 100);
-  });
-  return total;
-}
-
-/* =========================
-   💉 Apply Injection
-========================= */
-
-function applyInjection(
-  monthNumber,
-  injections,
-  loans,
-  privateInvestors,
-  cash
-) {
-
-  injections.forEach(inj => {
-
-    if (inj.month !== monthNumber) return;
-
-    const privateAlloc =
-      inj.amount * (inj.privatePercent / 100);
-
-    const bankAlloc =
-      inj.amount * (inj.bankPercent / 100);
-
-    const bufferAlloc =
-      inj.amount * (inj.bufferPercent / 100);
-
-    /* ---- Reduce Private (priority: pressure → negotiable → locked) ---- */
-
-    let remaining = privateAlloc;
-
-    const priorityOrder = ["pressure", "negotiable", "locked"];
-
-    priorityOrder.forEach(cat => {
-
-      privateInvestors
-        .filter(inv => inv.category === cat)
-        .forEach(inv => {
-
-          if (remaining <= 0) return;
-
-          const reducible = inv.principal;
-          const reduce = Math.min(reducible, remaining);
-
-          inv.principal -= reduce;
-          remaining -= reduce;
-        });
-    });
-
-    /* ---- Reduce Bank Loans (proportional) ---- */
-
-    let totalBankPrincipal = 0;
-
-    loans.forEach(l => {
-      if (l.type === "business") {
-        totalBankPrincipal += l.principal;
-      }
-    });
-
-    loans.forEach(l => {
-      if (l.type === "business") {
-        const share =
-          l.principal / totalBankPrincipal;
-        l.principal -= bankAlloc * share;
-      }
-    });
-
-    /* ---- Add Buffer ---- */
-
-    cash += bufferAlloc;
-  });
-
-  return cash;
-}
-
-async function updateSnapshot() {
-
-  const loansSnap = await getDocs(collection(db,"loans"));
-  const loans = loansSnap.docs.map(d=>d.data());
-
-  const privateSnap = await getDocs(collection(db,"privateInvestors"));
-  const privates = privateSnap.docs.map(d=>d.data());
-
-  let bank = 0;
-  let personal = 0;
-  let monthly = 0;
-
-  loans.forEach(l=>{
-    if(l.type==="business") bank+=l.principal;
-    if(l.type==="personal") personal+=l.principal;
-    monthly+=l.monthlyEMI;
-  });
-
-  let privateTotal=0;
-  let privateMonthly=0;
-
-  privates.forEach(p=>{
-    privateTotal+=p.principal;
-    privateMonthly+=p.principal*(p.monthlyRate/100);
-  });
-
-  document.getElementById("totalBank").innerText="₹"+bank;
-  document.getElementById("totalPersonal").innerText="₹"+personal;
-  document.getElementById("totalPrivate").innerText="₹"+privateTotal;
-  document.getElementById("totalMonthlyBurden").innerText=
-    "₹"+(monthly+privateMonthly);
-}
-
-
-
 
 async function loadInjectionsUI() {
 
   const snap = await getDocs(collection(db, "capitalInjections"));
   const injections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  const container = document.getElementById("injectionCards");
+  const container = document.getElementById("injectionList");
+  if (!container) return;
 
   container.innerHTML = injections.map(i => `
     <div class="card-item">
-      <strong>Month ${i.month}</strong>
-      <br>
-      Amount: ₹${i.amount}
-      <br>
-      Private: ${i.privatePercent}% | Bank: ${i.bankPercent}% | Buffer: ${i.bufferPercent}%
-      <br>
+      <strong>Month ${i.month}</strong><br>
+      Amount: ₹${i.amount}<br>
+      Private: ${i.privatePercent}% |
+      Bank: ${i.bankPercent}% |
+      Buffer: ${i.bufferPercent}%<br>
       <button onclick="editInjection('${i.id}')">Edit</button>
       <button onclick="deleteInjection('${i.id}')">Delete</button>
     </div>
@@ -195,8 +83,6 @@ window.editInjection = async function(id) {
   const newBank = prompt("Bank %", injection.bankPercent);
   const newBuffer = prompt("Buffer %", injection.bufferPercent);
 
-  if (!newMonth || !newAmount) return;
-
   await setDoc(doc(db, "capitalInjections", id), {
     month: Number(newMonth),
     amount: Number(newAmount),
@@ -209,13 +95,13 @@ window.editInjection = async function(id) {
 };
 
 window.deleteInjection = async function(id) {
-
   await deleteDoc(doc(db, "capitalInjections", id));
-
   loadInjectionsUI();
 };
 
-
+/* =========================
+   🏦 LOAD LOANS UI
+========================= */
 
 async function loadLoansUI() {
 
@@ -223,15 +109,13 @@ async function loadLoansUI() {
   const loans = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const container = document.getElementById("loanCards");
+  if (!container) return;
 
   container.innerHTML = loans.map(l => `
     <div class="card-item">
-      <strong>${l.name}</strong> (${l.type})
-      <br>
-      Principal: ₹${l.principal}
-      <br>
-      EMI: ₹${l.monthlyEMI}
-      <br>
+      <strong>${l.name}</strong> (${l.type})<br>
+      Principal: ₹${l.principal}<br>
+      EMI: ₹${l.monthlyEMI}<br>
       <button onclick="editLoan('${l.id}', ${l.principal}, ${l.monthlyEMI})">
         Edit
       </button>
@@ -239,13 +123,10 @@ async function loadLoansUI() {
   `).join("");
 }
 
-
 window.editLoan = async function(id, principal, emi) {
 
   const newPrincipal = prompt("New Principal", principal);
   const newEMI = prompt("New EMI", emi);
-
-  if (!newPrincipal || !newEMI) return;
 
   await setDoc(doc(db, "loans", id), {
     principal: Number(newPrincipal),
@@ -255,23 +136,24 @@ window.editLoan = async function(id, principal, emi) {
   loadLoansUI();
 };
 
+/* =========================
+   👤 LOAD PRIVATE UI
+========================= */
+
 async function loadPrivateUI() {
 
   const snap = await getDocs(collection(db, "privateInvestors"));
   const investors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const container = document.getElementById("privateCards");
+  if (!container) return;
 
   container.innerHTML = investors.map(inv => `
     <div class="card-item">
-      <strong>${inv.name}</strong>
-      <br>
-      Category: ${inv.category}
-      <br>
-      Principal: ₹${inv.principal}
-      <br>
-      Monthly Rate: ${inv.monthlyRate}%
-      <br>
+      <strong>${inv.name}</strong><br>
+      Category: ${inv.category}<br>
+      Principal: ₹${inv.principal}<br>
+      Monthly Rate: ${inv.monthlyRate}%<br>
       <button onclick="editPrivate('${inv.id}', ${inv.principal}, ${inv.monthlyRate})">
         Adjust
       </button>
@@ -287,8 +169,6 @@ window.editPrivate = async function(id, principal, rate) {
   const newPrincipal = prompt("New Principal", principal);
   const newRate = prompt("New Monthly %", rate);
 
-  if (!newPrincipal || !newRate) return;
-
   await setDoc(doc(db, "privateInvestors", id), {
     principal: Number(newPrincipal),
     monthlyRate: Number(newRate)
@@ -298,7 +178,6 @@ window.editPrivate = async function(id, principal, rate) {
 };
 
 window.skipInterest = async function(id) {
-
   await setDoc(doc(db, "privateInvestors", id), {
     monthlyRate: 0
   }, { merge: true });
@@ -306,73 +185,46 @@ window.skipInterest = async function(id) {
   loadPrivateUI();
 };
 
-
 /* =========================
    🚀 RUN SIMULATION
 ========================= */
 
 async function runSimulation() {
 
-  /* 1️⃣ Load Config */
   const configSnap =
     await getDoc(doc(db, "businessConfig", "main"));
 
   const config = configSnap.data();
 
-  /* 2️⃣ Load Loans */
   const loansSnap =
     await getDocs(collection(db, "loans"));
-
   const loans =
     loansSnap.docs.map(d => ({ ...d.data() }));
 
-  /* 3️⃣ Load Private */
   const invSnap =
     await getDocs(collection(db, "privateInvestors"));
-
   const privateInvestors =
     invSnap.docs.map(d => ({ ...d.data() }));
 
-  /* 4️⃣ Load Injections */
   const injSnap =
     await getDocs(collection(db, "capitalInjections"));
-
   const injections =
     injSnap.docs.map(d => d.data());
 
   let cash = config.openingCash;
   let history = [];
 
-  /* =========================
-     🔁 SIMULATION LOOP
-  ========================== */
-
   for (let m = 0; m < 36; m++) {
-
-    /* ---- Calendar Month ---- */
 
     const date = new Date(config.startDate);
     date.setMonth(date.getMonth() + m);
 
     const monthNum = date.getMonth() + 1;
 
-    /* ---- Billing Logic ---- */
-
-    let billing;
-
-    const override =
-      revenueOverrides.find(o => o.month === (m + 1));
-
-    if (override) {
-      billing = override.billing;
-    } else {
-      if (monthNum >= 3 && monthNum <= 9)
-        billing = config.peakBilling;
-      else
-        billing = config.lowBilling;
-    }
-
-    /* ---- Business Core ---- */
+    let billing =
+      (monthNum >= 3 && monthNum <= 9)
+        ? config.peakBilling
+        : config.lowBilling;
 
     const doctorCost =
       billing * (config.doctorPercent / 100);
@@ -380,23 +232,16 @@ async function runSimulation() {
     const cogs =
       billing * (config.cogsPercent / 100);
 
-    const contribution =
-      billing - doctorCost - cogs;
-
     const operating =
-      contribution -
-      config.fixedExpenses -
-      config.salary;
+      billing - doctorCost - cogs
+      - config.fixedExpenses
+      - config.salary;
 
     cash += operating;
-
-    /* ---- Loans ---- */
 
     let totalLoanEMI = 0;
     loans.forEach(l => totalLoanEMI += l.monthlyEMI);
     cash -= totalLoanEMI;
-
-    /* ---- Private ---- */
 
     let totalPrivateInterest = 0;
     privateInvestors.forEach(inv => {
@@ -406,7 +251,6 @@ async function runSimulation() {
 
     cash -= totalPrivateInterest;
 
-    /* ---- Injection ---- */
     cash = applyInjection(
       m + 1,
       injections,
@@ -418,6 +262,8 @@ async function runSimulation() {
     history.push({
       label: getMonthLabel(config.startDate, m),
       billing,
+      totalLoanEMI,
+      totalPrivateInterest,
       cash
     });
 
@@ -434,60 +280,34 @@ async function runSimulation() {
 }
 
 /* =========================
-   📊 Dashboard Renderer
-========================= */
-
-function renderDashboard(data) {
-
-  const container =
-    document.getElementById("dashboard");
-
-  container.innerHTML =
-    data.map(row => `
-      <div style="
-        padding:8px;
-        border-bottom:1px solid #334155;
-      ">
-        <strong>${row.label}</strong>
-        <br>
-        Billing: ₹${Math.round(row.billing || 0)}
-        <br>
-        EMI: ₹${Math.round(row.totalLoanEMI || 0)}
-        <br>
-        Private Interest: ₹${Math.round(row.totalPrivateInterest || 0)}
-        <br>
-        Cash: ₹${Math.round(row.cash || 0)}
-      </div>
-    `).join("");
-}
-
-
-/* =========================
-   🎬 BUTTON BIND
+   🎬 INIT
 ========================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+
   loadLoansUI();
   loadPrivateUI();
   loadInjectionsUI();
-  updateSnapshot();
 
   const runBtn = document.getElementById("runSim");
   if (runBtn) {
     runBtn.addEventListener("click", runSimulation);
   }
-});
 
-document.getElementById("addInjection")
-  .addEventListener("click", async () => {
+  const injectBtn = document.getElementById("addInjection");
+  if (injectBtn) {
+    injectBtn.addEventListener("click", async () => {
 
-    await addDoc(collection(db,"capitalInjections"),{
-      month:Number(injectMonth.value),
-      amount:Number(injectAmount.value),
-      privatePercent:Number(injectPrivatePercent.value),
-      bankPercent:Number(injectBankPercent.value),
-      bufferPercent:Number(injectBufferPercent.value)
+      await addDoc(collection(db, "capitalInjections"), {
+        month: Number(injectMonth.value),
+        amount: Number(injectAmount.value),
+        privatePercent: Number(injectPrivatePercent.value),
+        bankPercent: Number(injectBankPercent.value),
+        bufferPercent: Number(injectBufferPercent.value)
+      });
+
+      loadInjectionsUI();
     });
+  }
 
-    loadInjectionsUI();
 });

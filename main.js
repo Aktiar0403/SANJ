@@ -180,6 +180,42 @@ async function loadInjectionsUI() {
   `).join("");
 }
 
+window.editInjection = async function(id) {
+
+  const snap = await getDocs(collection(db, "capitalInjections"));
+  const injection = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .find(i => i.id === id);
+
+  if (!injection) return;
+
+  const newMonth = prompt("Month", injection.month);
+  const newAmount = prompt("Amount", injection.amount);
+  const newPrivate = prompt("Private %", injection.privatePercent);
+  const newBank = prompt("Bank %", injection.bankPercent);
+  const newBuffer = prompt("Buffer %", injection.bufferPercent);
+
+  if (!newMonth || !newAmount) return;
+
+  await setDoc(doc(db, "capitalInjections", id), {
+    month: Number(newMonth),
+    amount: Number(newAmount),
+    privatePercent: Number(newPrivate),
+    bankPercent: Number(newBank),
+    bufferPercent: Number(newBuffer)
+  }, { merge: true });
+
+  loadInjectionsUI();
+};
+
+window.deleteInjection = async function(id) {
+
+  await deleteDoc(doc(db, "capitalInjections", id));
+
+  loadInjectionsUI();
+};
+
+
 
 async function loadLoansUI() {
 

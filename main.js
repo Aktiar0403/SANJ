@@ -9,7 +9,7 @@ import {
   deleteDoc
 } from "./firebase.js";
 
-import { applyInjection } from "./injectionEngine.js";
+
 
 /* =========================
    📅 Month Label Generator
@@ -184,6 +184,47 @@ window.skipInterest = async function(id) {
 
   loadPrivateUI();
 };
+
+function applyInjection(month, injections, loans, privateInvestors, cash) {
+
+  injections.forEach(inj => {
+
+    if (inj.month !== month) return;
+
+    const privateAlloc =
+      inj.amount * (inj.privatePercent / 100);
+
+    const bankAlloc =
+      inj.amount * (inj.bankPercent / 100);
+
+    const bufferAlloc =
+      inj.amount * (inj.bufferPercent / 100);
+
+    let remaining = privateAlloc;
+
+    privateInvestors.forEach(inv => {
+
+      if (remaining <= 0) return;
+
+      const reduce =
+        Math.min(inv.principal, remaining);
+
+      inv.principal -= reduce;
+      remaining -= reduce;
+    });
+
+    loans.forEach(l => {
+      l.principal -= bankAlloc / loans.length;
+    });
+
+    cash += bufferAlloc;
+  });
+
+  return cash;
+}
+
+
+
 
 /* =========================
    🚀 RUN SIMULATION

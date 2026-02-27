@@ -23,7 +23,33 @@ function getMonthLabel(startDate, offset) {
     year: "numeric"
   });
 }
+function generateSeasonalRevenue(totalYearRevenue) {
 
+  const weights = [
+    0.7, // Jan
+    0.8, // Feb
+    1.0, // Mar
+    1.4, // Apr
+    1.5, // May
+    1.4, // Jun
+    1.2, // Jul
+    1.1, // Aug
+    1.1, // Sep
+    1.0, // Oct
+    0.9, // Nov
+    0.8  // Dec
+  ];
+
+  const totalWeight =
+    weights.reduce((a,b)=>a+b,0);
+
+  return weights.map(w => {
+    const monthly =
+      (w / totalWeight) * totalYearRevenue;
+
+    return Math.round(monthly);
+  });
+}
 /* =========================
    📊 DASHBOARD RENDER
 ========================= */
@@ -232,6 +258,10 @@ function applyInjection(month, injections, loans, privateInvestors, cash) {
 
 async function runSimulation() {
 
+  /* =========================
+     1️⃣ LOAD DATA FROM FIREBASE
+  ========================== */
+
   const configSnap =
     await getDoc(doc(db, "businessConfig", "main"));
 
@@ -252,20 +282,31 @@ async function runSimulation() {
   const injections =
     injSnap.docs.map(d => d.data());
 
+  /* =========================
+     2️⃣ SEASONAL REVENUE SETUP
+  ========================== */
+
+  const yearlyRevenue = 15000000; // 1.5 Cr
+  const seasonalRevenue =
+    generateSeasonalRevenue(yearlyRevenue);
+
   let cash = config.openingCash;
   let history = [];
 
+  /* =========================
+     3️⃣ 36-MONTH LOOP
+  ========================== */
+
   for (let m = 0; m < 36; m++) {
 
-    const date = new Date(config.startDate);
-    date.setMonth(date.getMonth() + m);
+    const baseDate = new Date(config.startDate);
+    baseDate.setMonth(baseDate.getMonth() + m);
 
-    const monthNum = date.getMonth() + 1;
+    const monthIndex = baseDate.getMonth(); // 0–11
 
-    let billing =
-      (monthNum >= 3 && monthNum <= 9)
-        ? config.peakBilling
-        : config.lowBilling;
+    const billing = seasonalRevenue[monthIndex];
+
+    /* ---- BUSINESS CORE ---- */
 
     const doctorCost =
       billing * (config.doctorPercent / 100);
@@ -274,23 +315,36 @@ async function runSimulation() {
       billing * (config.cogsPercent / 100);
 
     const operating =
-      billing - doctorCost - cogs
+      billing
+      - doctorCost
+      - cogs
       - config.fixedExpenses
       - config.salary;
 
     cash += operating;
 
+    /* ---- BANK + PERSONAL EMI ---- */
+
     let totalLoanEMI = 0;
-    loans.forEach(l => totalLoanEMI += l.monthlyEMI);
+
+    loans.forEach(l => {
+      totalLoanEMI += Number(l.monthlyEMI || 0);
+    });
+
     cash -= totalLoanEMI;
 
+    /* ---- PRIVATE INTEREST ---- */
+
     let totalPrivateInterest = 0;
+
     privateInvestors.forEach(inv => {
       totalPrivateInterest +=
         inv.principal * (inv.monthlyRate / 100);
     });
 
     cash -= totalPrivateInterest;
+
+    /* ---- APPLY INJECTION ---- */
 
     cash = applyInjection(
       m + 1,
@@ -300,13 +354,18 @@ async function runSimulation() {
       cash
     );
 
+    /* ---- STORE MONTH SNAPSHOT ---- */
+
     history.push({
       label: getMonthLabel(config.startDate, m),
       billing,
       totalLoanEMI,
       totalPrivateInterest,
+      operating,
       cash
     });
+
+    /* ---- COLLAPSE CHECK ---- */
 
     if (cash < 0) {
       history.push({
@@ -316,6 +375,10 @@ async function runSimulation() {
       break;
     }
   }
+
+  /* =========================
+     4️⃣ RENDER DASHBOARD
+  ========================== */
 
   renderDashboard(history);
 }

@@ -226,30 +226,80 @@ function applyInjection(month, injections, loans, privateInvestors, cash) {
     const bufferAlloc =
       inj.amount * (inj.bufferPercent / 100);
 
+    /* ======================
+       REDUCE PRIVATE FIRST
+    ====================== */
+
     let remaining = privateAlloc;
 
-    privateInvestors.forEach(inv => {
+    // Priority order
+    const priority = ["flexible", "partial", "locked"];
 
-      if (remaining <= 0) return;
+    priority.forEach(type => {
 
-      const reduce =
-        Math.min(inv.principal, remaining);
+      privateInvestors
+        .filter(inv => inv.type === type)
+        .forEach(inv => {
 
-      inv.principal -= reduce;
-      remaining -= reduce;
+          if (remaining <= 0) return;
+
+          let reducible = inv.principal;
+
+          if (inv.type === "partial") {
+            reducible =
+              inv.principal - (inv.minLockedPrincipal || 0);
+          }
+
+          const reduce =
+            Math.min(reducible, remaining);
+
+          inv.principal -= reduce;
+          remaining -= reduce;
+        });
     });
+
+    /* ======================
+       REDUCE BANK PROPORTIONALLY
+    ====================== */
+
+    const totalPrincipal =
+      loans.reduce((sum,l)=>sum+l.principal,0);
 
     loans.forEach(l => {
-      l.principal -= bankAlloc / loans.length;
+      const share =
+        l.principal / totalPrincipal;
+
+      l.principal -= bankAlloc * share;
     });
+
+    /* ======================
+       ADD BUFFER
+    ====================== */
 
     cash += bufferAlloc;
   });
 
   return cash;
 }
+function processPrivateInvestors(privateInvestors, currentMonth) {
 
+  let totalInterest = 0;
 
+  privateInvestors.forEach(inv => {
+
+    const monthlyInterest =
+      inv.principal * (inv.monthlyRate / 100);
+
+    // Skip logic
+    if (currentMonth <= (inv.skipUntilMonth || 0)) {
+      return;
+    }
+
+    totalInterest += monthlyInterest;
+  });
+
+  return totalInterest;
+}
 
 
 /* =========================

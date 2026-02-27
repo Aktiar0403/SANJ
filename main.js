@@ -427,18 +427,17 @@ function renderDashboard(data) {
    🎬 BUTTON BIND
 ========================= */
 
-document.getElementById("runSim")
-  .addEventListener("click", runSimulation);
-
-
-
 document.addEventListener("DOMContentLoaded", () => {
   loadLoansUI();
   loadPrivateUI();
   loadInjectionsUI();
   updateSnapshot();
-});
 
+  const runBtn = document.getElementById("runSim");
+  if (runBtn) {
+    runBtn.addEventListener("click", runSimulation);
+  }
+});
 
 document.getElementById("addInjection")
   .addEventListener("click", async () => {

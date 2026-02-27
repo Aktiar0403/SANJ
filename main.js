@@ -9,20 +9,20 @@ import {
 import {
   generateSeasonalRevenue,
   calculateBusiness
-} from "./businessEngine.js";
+} from "./engines/businessEngine.js";
 
 import {
   processBankLoans,
   processInjectionPayout
-} from "./debtEngine.js";
+} from "./engines/debtEngine.js";
 
 import {
   processPrivateInterest
-} from "./privateEngine.js";
+} from "./engines/privateEngine.js";
 
 import {
   applyInjection
-} from "./injectionEngine.js";
+} from "./engines/injectionEngine.js";
 
 /* =============================
    SIMULATION

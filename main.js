@@ -422,17 +422,6 @@ function renderDashboard(data) {
     `).join("");
 }
 
-function renderOverrides() {
-
-  const container = document.getElementById("overrideList");
-
-  container.innerHTML = revenueOverrides.map(o => `
-    <div class="card-item">
-      Month ${o.month}
-      → Billing ₹${o.billing}
-    </div>
-  `).join("");
-}
 
 /* =========================
    🎬 BUTTON BIND
@@ -441,16 +430,7 @@ function renderOverrides() {
 document.getElementById("runSim")
   .addEventListener("click", runSimulation);
 
-  document.getElementById("addRevenueOverride")
-  .addEventListener("click", () => {
 
-    revenueOverrides.push({
-      month: Number(overrideMonthNumber.value),
-      billing: Number(overrideRevenue.value)
-    });
-
-    renderOverrides();
-});
 
 document.addEventListener("DOMContentLoaded", () => {
   loadLoansUI();

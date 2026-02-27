@@ -44,10 +44,35 @@
 <!-- ================= PRIVATE ================= -->
 
 <section class="card">
-  <h2>Private Investors</h2>
-  <div id="privateCards"></div>
-</section>
+  <h2>Private Investors Manager</h2>
 
+  <div class="grid-2">
+
+    <input id="piName" placeholder="Name">
+
+    <input id="piPrincipal" type="number" placeholder="Principal">
+
+    <input id="piRate" type="number" placeholder="Monthly %">
+
+    <select id="piType">
+      <option value="pressure">Pressure</option>
+      <option value="negotiable">Negotiable</option>
+      <option value="locked">Locked</option>
+    </select>
+
+    <input id="piMinLocked" type="number" placeholder="Min Locked Principal">
+
+    <input id="piSkipUntil" type="number" placeholder="Skip Until Month">
+
+    <input id="piPriority" type="number" placeholder="Priority Level">
+
+  </div>
+
+  <button id="addPrivateInvestor">Add Investor</button>
+
+  <div id="privateCards"></div>
+
+</section>
 <!-- ================= INJECTIONS ================= -->
 
 <section class="card">

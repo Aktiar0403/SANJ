@@ -81,3 +81,10 @@ button.primary {
 button:hover {
   opacity: 0.9;
 }
+
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+  gap: 10px;
+}

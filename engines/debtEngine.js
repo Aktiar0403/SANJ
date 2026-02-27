@@ -1,25 +1,21 @@
-export function processDebt(bankLoans, personalLoans, privateInvestors) {
+export function processBankLoans(loans){
 
-  let totalBankEMI = 0;
-  let totalPersonalEMI = 0;
-  let totalPrivateInterest = 0;
+  const totalEMI =
+    loans.reduce((sum,l)=>sum+l.monthlyEMI,0);
 
-  bankLoans.forEach(b => {
-    totalBankEMI += b.monthlyEMI;
+  return totalEMI;
+}
+
+export function processInjectionPayout(injections,currentMonth){
+
+  let total = 0;
+
+  injections.forEach(inj=>{
+    if(currentMonth>=inj.month){
+      total += inj.amount *
+        (inj.monthlyPayoutRate/100);
+    }
   });
 
-  personalLoans.forEach(p => {
-    totalPersonalEMI += p.monthlyEMI;
-  });
-
-  privateInvestors.forEach(inv => {
-    totalPrivateInterest +=
-      inv.principal * (inv.monthlyRate / 100);
-  });
-
-  return {
-    totalBankEMI,
-    totalPersonalEMI,
-    totalPrivateInterest
-  };
+  return total;
 }

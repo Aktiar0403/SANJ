@@ -3,8 +3,12 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc
-} from "./firebase.js";
+  getDoc,
+  addDoc,
+  setDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 
 let revenueOverrides = [];

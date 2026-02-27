@@ -1,41 +1,83 @@
 body {
-  font-family: Arial;
+  font-family: 'Inter', sans-serif;
   background: #0f172a;
-  color: white;
-  padding: 20px;
+  color: #e2e8f0;
+  padding: 30px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .card {
   background: #1e293b;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.highlight {
+  background: linear-gradient(135deg,#1e293b,#0f172a);
+  border: 1px solid #334155;
 }
 
 .grid {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
-input, select {
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 20px;
 }
 
-button {
-  padding: 8px 12px;
-  margin-top: 10px;
-  cursor: pointer;
+.metric {
+  background: #0f172a;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.metric h3 {
+  margin: 10px 0 0;
+  font-size: 20px;
+}
+
+.metric span {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.metric.danger h3 {
+  color: #ef4444;
 }
 
 .card-item {
   background: #0f172a;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
   border: 1px solid #334155;
 }
-.card-item button {
-  margin-right: 5px;
+
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #3b82f6;
+  color: white;
+  display: block;
+  margin: 20px auto;
+  font-size: 16px;
+}
+
+button:hover {
+  opacity: 0.9;
 }

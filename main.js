@@ -120,8 +120,62 @@ function applyInjection(
   return cash;
 }
 
+async function updateSnapshot() {
+
+  const loansSnap = await getDocs(collection(db,"loans"));
+  const loans = loansSnap.docs.map(d=>d.data());
+
+  const privateSnap = await getDocs(collection(db,"privateInvestors"));
+  const privates = privateSnap.docs.map(d=>d.data());
+
+  let bank = 0;
+  let personal = 0;
+  let monthly = 0;
+
+  loans.forEach(l=>{
+    if(l.type==="business") bank+=l.principal;
+    if(l.type==="personal") personal+=l.principal;
+    monthly+=l.monthlyEMI;
+  });
+
+  let privateTotal=0;
+  let privateMonthly=0;
+
+  privates.forEach(p=>{
+    privateTotal+=p.principal;
+    privateMonthly+=p.principal*(p.monthlyRate/100);
+  });
+
+  document.getElementById("totalBank").innerText="₹"+bank;
+  document.getElementById("totalPersonal").innerText="₹"+personal;
+  document.getElementById("totalPrivate").innerText="₹"+privateTotal;
+  document.getElementById("totalMonthlyBurden").innerText=
+    "₹"+(monthly+privateMonthly);
+}
 
 
+
+
+async function loadInjectionsUI() {
+
+  const snap = await getDocs(collection(db, "capitalInjections"));
+  const injections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const container = document.getElementById("injectionCards");
+
+  container.innerHTML = injections.map(i => `
+    <div class="card-item">
+      <strong>Month ${i.month}</strong>
+      <br>
+      Amount: ₹${i.amount}
+      <br>
+      Private: ${i.privatePercent}% | Bank: ${i.bankPercent}% | Buffer: ${i.bufferPercent}%
+      <br>
+      <button onclick="editInjection('${i.id}')">Edit</button>
+      <button onclick="deleteInjection('${i.id}')">Delete</button>
+    </div>
+  `).join("");
+}
 
 
 async function loadLoansUI() {
@@ -401,4 +455,21 @@ document.getElementById("runSim")
 document.addEventListener("DOMContentLoaded", () => {
   loadLoansUI();
   loadPrivateUI();
+  loadInjectionsUI();
+  updateSnapshot();
+});
+
+
+document.getElementById("addInjection")
+  .addEventListener("click", async () => {
+
+    await addDoc(collection(db,"capitalInjections"),{
+      month:Number(injectMonth.value),
+      amount:Number(injectAmount.value),
+      privatePercent:Number(injectPrivatePercent.value),
+      bankPercent:Number(injectBankPercent.value),
+      bufferPercent:Number(injectBufferPercent.value)
+    });
+
+    loadInjectionsUI();
 });

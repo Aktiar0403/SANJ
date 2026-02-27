@@ -2,92 +2,75 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>SANJ Capital Strategy Simulator</title>
+  <title>SANJ Financial Control Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<h1>Capital Restructuring Simulator</h1>
+<h1>SANJ Financial Command Center</h1>
 
-<section class="card">
-  <h2>Business Model</h2>
-  <div class="grid">
-    <input id="startDate" type="month" value="2026-03">
-    <input id="peakBilling" type="number" placeholder="Peak Billing (Mar–Sep)">
-    <input id="lowBilling" type="number" placeholder="Low Billing (Oct–Feb)">
-    <input id="doctorPercent" type="number" placeholder="Doctor %">
-    <input id="cogsPercent" type="number" placeholder="COGS %">
-    <input id="fixedExpenses" type="number" placeholder="Fixed Expenses">
-    <input id="salary" type="number" placeholder="Salary">
-    <input id="openingCash" type="number" placeholder="Opening Cash">
+<!-- ================= SNAPSHOT ================= -->
+
+<section class="card highlight">
+  <h2>Financial Snapshot</h2>
+  <div class="grid-4">
+    <div class="metric">
+      <span>Total Bank Liability</span>
+      <h3 id="totalBank"></h3>
+    </div>
+    <div class="metric">
+      <span>Total Personal Liability</span>
+      <h3 id="totalPersonal"></h3>
+    </div>
+    <div class="metric">
+      <span>Total Private Liability</span>
+      <h3 id="totalPrivate"></h3>
+    </div>
+    <div class="metric danger">
+      <span>Total Monthly Burden</span>
+      <h3 id="totalMonthlyBurden"></h3>
+    </div>
   </div>
 </section>
 
-<section class="card">
-  <h2>Bank</h2>
-  <input id="bankPrincipal" type="number" placeholder="Bank Principal">
-  <input id="bankEMI" type="number" placeholder="Monthly EMI">
-</section>
-
-<section class="card">
-  <h2>Private Investors</h2>
-  <div class="grid">
-    <input id="invName" placeholder="Name">
-    <input id="invPrincipal" type="number" placeholder="Principal">
-    <input id="invRate" type="number" placeholder="Monthly %">
-    <select id="invType">
-      <option value="flexible">Flexible</option>
-      <option value="locked">Locked</option>
-      <option value="partial">Partial</option>
-    </select>
-    <input id="invMinLocked" type="number" placeholder="Min Locked Principal">
-  </div>
-  <button id="addInvestor">Add</button>
-  <div id="investorList"></div>
-</section>
-
-<section class="card">
-  <h2>Capital Injection</h2>
-  <div class="grid">
-    <input id="injectMonth" type="number" placeholder="Month No">
-    <input id="injectAmount" type="number" placeholder="Amount">
-    <input id="injectPrivatePercent" type="number" placeholder="% Private">
-    <input id="injectBankPercent" type="number" placeholder="% Bank">
-    <input id="injectBufferPercent" type="number" placeholder="% Buffer">
-  </div>
-  <button id="addInjection">Add Injection</button>
-  <div id="injectionList"></div>
-</section>
-
-<button id="runSim">Run 36 Month Simulation</button>
-
-<section class="card">
-  <h2>Dashboard</h2>
-  <div id="dashboard"></div>
-</section>
+<!-- ================= LOANS ================= -->
 
 <section class="card">
   <h2>Loans Manager</h2>
   <div id="loanCards"></div>
 </section>
 
+<!-- ================= PRIVATE ================= -->
+
 <section class="card">
-  <h2>Private Investors Manager</h2>
+  <h2>Private Investors</h2>
   <div id="privateCards"></div>
 </section>
 
+<!-- ================= INJECTIONS ================= -->
+
 <section class="card">
-  <h2>Revenue Overrides</h2>
+  <h2>Capital Injection Planner</h2>
 
   <div class="grid">
-    <input id="overrideMonthNumber" type="number" placeholder="Month No (1-36)">
-    <input id="overrideRevenue" type="number" placeholder="Override Billing">
+    <input id="injectMonth" type="number" placeholder="Month (1-36)">
+    <input id="injectAmount" type="number" placeholder="Amount">
+    <input id="injectPrivatePercent" type="number" placeholder="% to Private">
+    <input id="injectBankPercent" type="number" placeholder="% to Bank">
+    <input id="injectBufferPercent" type="number" placeholder="% to Buffer">
   </div>
 
-  <button id="addRevenueOverride">Add Override</button>
+  <button id="addInjection">Add / Update Injection</button>
 
-  <div id="overrideList"></div>
+  <div id="injectionCards"></div>
+</section>
+
+<button class="primary" id="runSim">Run 36 Month Simulation</button>
+
+<section class="card">
+  <h2>Projection Dashboard</h2>
+  <div id="dashboard"></div>
 </section>
 
 <script type="module" src="main.js"></script>

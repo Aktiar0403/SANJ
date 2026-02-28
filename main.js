@@ -164,6 +164,75 @@ async function previewInjectionImpact() {
     breakdown
   });
 }
+
+function sortInvestorsForPreview(list, strategy) {
+
+  const clone = [...list];
+
+  switch(strategy) {
+
+    case "pressure_first":
+      return clone.sort((a,b)=>
+        a.type === "pressure" ? -1 : 1
+      );
+
+    case "negotiable_first":
+      return clone.sort((a,b)=>
+        a.type === "negotiable" ? -1 : 1
+      );
+
+    case "highest_interest_first":
+      return clone.sort((a,b)=>
+        b.monthlyRate - a.monthlyRate
+      );
+
+    case "priority_level_first":
+      return clone.sort((a,b)=>
+        (a.priorityLevel||1) -
+        (b.priorityLevel||1)
+      );
+
+    default:
+      return clone;
+  }
+}
+
+
+function renderInjectionPreview(data) {
+
+  const container =
+    document.getElementById("injectionPreview");
+
+  container.innerHTML = `
+    <p><strong>Private Interest Before:</strong> ₹${Math.round(data.privateBefore)}</p>
+    <p><strong>Private Interest After:</strong> ₹${Math.round(data.privateAfter)}</p>
+    <p><strong>Injection 1% Payout:</strong> ₹${Math.round(data.injectionPayout)}</p>
+    <p><strong>Net Monthly Impact:</strong>
+      <span style="color:${data.netImpact >= 0 ? 'lime' : 'red'}">
+        ₹${Math.round(data.netImpact)}
+      </span>
+    </p>
+
+    <h4>Reduction Breakdown</h4>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Before</th>
+        <th>Reduced</th>
+        <th>After</th>
+      </tr>
+      ${data.breakdown.map(b=>`
+        <tr>
+          <td>${b.name}</td>
+          <td>₹${Math.round(b.before)}</td>
+          <td>₹${Math.round(b.reduced)}</td>
+          <td>₹${Math.round(b.after)}</td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
 /* ======================================
    RUN SIMULATION
 ====================================== */
@@ -328,7 +397,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     ?.addEventListener("click",runSimulation);
 
   document
-    .getElementById("addHypotheticalBtn")
-    ?.addEventListener("click",addHypotheticalInjection);
+  .getElementById("addHypotheticalBtn")
+  ?.addEventListener("click", previewInjectionImpact);
 
 });

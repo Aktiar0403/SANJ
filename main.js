@@ -488,7 +488,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     ?.addEventListener("click",runSimulation);
 
   document
-  .getElementById("addHypotheticalBtn")
-  ?.addEventListener("click", previewInjectionImpact);
+    .getElementById("previewInjectionBtn")
+    ?.addEventListener("click", previewInjectionImpact);
 
 });

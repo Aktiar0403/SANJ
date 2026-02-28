@@ -86,77 +86,94 @@
 
 <h1>Capital Allocation Simulator</h1>
 
-<!-- =======================
-     SIMULATION CONTROLS
-======================= -->
+<!-- =========================
+     1️⃣ BUSINESS SNAPSHOT
+========================= -->
 <div class="card">
-  <h2>Simulation Controls</h2>
-
-  <div class="grid-3">
-    <div>
-      <label>Growth % (Optional)</label>
-      <input id="growthInput" type="number" placeholder="0">
-    </div>
-
-    <div>
-      <label>Run Until Collapse</label>
-      <input type="checkbox" id="runUntilCollapse">
-    </div>
-  </div>
-
-  <button id="runSimulationBtn">Run Simulation</button>
+  <h2>Current Business Snapshot</h2>
+  <div id="snapshot"></div>
 </div>
 
-<!-- =======================
-     HYPOTHETICAL INJECTION
-======================= -->
+<!-- =========================
+     2️⃣ INJECTION PLANNER
+========================= -->
 <div class="card">
-  <h2>Add Hypothetical Injection (Simulation Only)</h2>
+  <h2>Injection Planner</h2>
 
+  <h4>Injection Input</h4>
   <div class="grid-3">
-    <input id="injAmount" type="number" placeholder="Amount">
-    <input id="injMonth" type="number" placeholder="Month Number">
+    <input id="injAmount" type="number" placeholder="Injection Amount">
+    <input id="injMonth" type="number" placeholder="Injection Month">
+  </div>
+
+  <h4>Allocation (%)</h4>
+  <div class="grid-3">
     <input id="injPrivate" type="number" placeholder="Private %">
     <input id="injBank" type="number" placeholder="Bank %">
     <input id="injBuffer" type="number" placeholder="Buffer %">
-
-    <select id="injStrategy">
-      <option value="pressure_first">Pressure First</option>
-      <option value="negotiable_first">Negotiable First</option>
-      <option value="highest_interest_first">Highest Interest First</option>
-      <option value="priority_level_first">Priority Level First</option>
-      <option value="equal_distribution">Equal Distribution</option>
-    </select>
   </div>
 
-  <button id="addHypotheticalBtn">Add Injection (Simulation Only)</button>
+  <h4>Strategy</h4>
+  <select id="injStrategy">
+    <option value="pressure_first">Pressure First</option>
+    <option value="negotiable_first">Negotiable First</option>
+    <option value="highest_interest_first">Highest Interest First</option>
+    <option value="priority_level_first">Priority Level First</option>
+    <option value="equal_distribution">Equal Distribution</option>
+  </select>
+
+  <div style="margin-top:10px;">
+    <button id="previewInjectionBtn">Preview Injection</button>
+    <button id="commitInjectionBtn">Commit Injection</button>
+  </div>
 </div>
+
+<!-- =========================
+     3️⃣ INJECTION IMPACT
+========================= -->
 <div class="card">
   <h2>Injection Impact Preview</h2>
   <div id="injectionPreview"></div>
 </div>
-<!-- =======================
-     SUMMARY
-======================= -->
-<div class="card summary">
+
+<!-- =========================
+     4️⃣ SIMULATION CONTROLS
+========================= -->
+<div class="card">
+  <h2>Simulation Controls</h2>
+
+  <div class="grid-3">
+    <input id="growthInput" type="number" placeholder="Growth % (optional)">
+    <label>
+      <input type="checkbox" id="runUntilCollapse">
+      Run Until Collapse
+    </label>
+  </div>
+
+  <button id="runSimulationBtn">Run 5-Year Simulation</button>
+</div>
+
+<!-- =========================
+     5️⃣ RESULTS SUMMARY
+========================= -->
+<div class="card">
   <h2>Simulation Summary</h2>
   <div id="summary"></div>
 </div>
 
-<!-- =======================
-     CASH GRAPH
-======================= -->
+<!-- =========================
+     6️⃣ CASH GRAPH
+========================= -->
 <div class="card">
   <h2>Cash Curve</h2>
   <canvas id="cashChart" height="100"></canvas>
 </div>
 
-<!-- =======================
-     RESULTS TABLE
-======================= -->
+<!-- =========================
+     7️⃣ MONTHLY BREAKDOWN
+========================= -->
 <div class="card">
   <h2>Monthly Breakdown</h2>
-
   <table>
     <thead>
       <tr>
@@ -174,9 +191,6 @@
   </table>
 </div>
 
-<!-- =======================
-     SCRIPTS
-======================= -->
 <script type="module" src="firebase.js"></script>
 <script type="module" src="main.js"></script>
 

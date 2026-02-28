@@ -1,104 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SANJ Financial Control Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <title>Capital Allocation Simulator</title>
+
+  <!-- Prevent favicon 404 -->
+  <link rel="icon" href="data:," />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    input, select, button {
+      padding: 6px;
+      border-radius: 4px;
+      border: none;
+      width: 100%;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #334155;
+      padding: 6px;
+      text-align: left;
+    }
+
+    th {
+      background: #1e293b;
+    }
+
+    canvas {
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .summary p {
+      margin: 4px 0;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>SANJ Financial Command Center</h1>
+<h1>Capital Allocation Simulator</h1>
 
-<!-- ================= SNAPSHOT ================= -->
+<!-- =======================
+     SIMULATION CONTROLS
+======================= -->
+<div class="card">
+  <h2>Simulation Controls</h2>
 
-<section class="card highlight">
-  <h2>Financial Snapshot</h2>
-  <div class="grid-4">
-    <div class="metric">
-      <span>Total Bank Liability</span>
-      <h3 id="totalBank"></h3>
+  <div class="grid-3">
+    <div>
+      <label>Growth % (Optional)</label>
+      <input id="growthInput" type="number" placeholder="0">
     </div>
-    <div class="metric">
-      <span>Total Personal Liability</span>
-      <h3 id="totalPersonal"></h3>
-    </div>
-    <div class="metric">
-      <span>Total Private Liability</span>
-      <h3 id="totalPrivate"></h3>
-    </div>
-    <div class="metric danger">
-      <span>Total Monthly Burden</span>
-      <h3 id="totalMonthlyBurden"></h3>
+
+    <div>
+      <label>Run Until Collapse</label>
+      <input type="checkbox" id="runUntilCollapse">
     </div>
   </div>
-</section>
 
-<!-- ================= LOANS ================= -->
+  <button id="runSimulationBtn">Run Simulation</button>
+</div>
 
-<section class="card">
-  <h2>Loans Manager</h2>
-  <div id="loanCards"></div>
-</section>
+<!-- =======================
+     HYPOTHETICAL INJECTION
+======================= -->
+<div class="card">
+  <h2>Add Hypothetical Injection (Simulation Only)</h2>
 
-<!-- ================= PRIVATE ================= -->
+  <div class="grid-3">
+    <input id="injAmount" type="number" placeholder="Amount">
+    <input id="injMonth" type="number" placeholder="Month Number">
+    <input id="injPrivate" type="number" placeholder="Private %">
+    <input id="injBank" type="number" placeholder="Bank %">
+    <input id="injBuffer" type="number" placeholder="Buffer %">
 
-<section class="card">
-  <h2>Private Investors Manager</h2>
-
-  <div class="grid-2">
-
-    <input id="piName" placeholder="Name">
-
-    <input id="piPrincipal" type="number" placeholder="Principal">
-
-    <input id="piRate" type="number" placeholder="Monthly %">
-
-    <select id="piType">
-      <option value="pressure">Pressure</option>
-      <option value="negotiable">Negotiable</option>
-      <option value="locked">Locked</option>
+    <select id="injStrategy">
+      <option value="pressure_first">Pressure First</option>
+      <option value="negotiable_first">Negotiable First</option>
+      <option value="highest_interest_first">Highest Interest First</option>
+      <option value="priority_level_first">Priority Level First</option>
+      <option value="equal_distribution">Equal Distribution</option>
     </select>
-
-    <input id="piMinLocked" type="number" placeholder="Min Locked Principal">
-
-    <input id="piSkipUntil" type="number" placeholder="Skip Until Month">
-
-    <input id="piPriority" type="number" placeholder="Priority Level">
-
   </div>
 
-  <button id="addPrivateInvestor">Add Investor</button>
+  <button id="addHypotheticalBtn">Add Injection (Simulation Only)</button>
+</div>
 
-  <div id="privateCards"></div>
+<!-- =======================
+     SUMMARY
+======================= -->
+<div class="card summary">
+  <h2>Simulation Summary</h2>
+  <div id="summary"></div>
+</div>
 
-</section>
-<!-- ================= INJECTIONS ================= -->
+<!-- =======================
+     CASH GRAPH
+======================= -->
+<div class="card">
+  <h2>Cash Curve</h2>
+  <canvas id="cashChart" height="100"></canvas>
+</div>
 
-<section class="card">
-  <h2>Capital Injection Planner</h2>
+<!-- =======================
+     RESULTS TABLE
+======================= -->
+<div class="card">
+  <h2>Monthly Breakdown</h2>
 
-  <div class="grid">
-    <input id="injectMonth" type="number" placeholder="Month (1-36)">
-    <input id="injectAmount" type="number" placeholder="Amount">
-    <input id="injectPrivatePercent" type="number" placeholder="% to Private">
-    <input id="injectBankPercent" type="number" placeholder="% to Bank">
-    <input id="injectBufferPercent" type="number" placeholder="% to Buffer">
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Billing</th>
+        <th>Business Expense</th>
+        <th>Bank EMI</th>
+        <th>Private Interest</th>
+        <th>Injection Payout</th>
+        <th>Cash</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="simulationTable"></tbody>
+  </table>
+</div>
 
-  <button id="addInjection">Add / Update Injection</button>
-
-  <div id="injectionCards"></div>
-</section>
-
-<button class="primary" id="runSim">Run 36 Month Simulation</button>
-
-<section class="card">
-  <h2>Projection Dashboard</h2>
-  <div id="dashboard"></div>
-</section>
-
+<!-- =======================
+     SCRIPTS
+======================= -->
+<script type="module" src="firebase.js"></script>
 <script type="module" src="main.js"></script>
+
 </body>
 </html>

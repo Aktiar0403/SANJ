@@ -164,6 +164,7 @@ function toLakh(n){
 async function previewInjectionImpact() {
 
   const baseState = await loadBaseState();
+
   const amount = Number(document.getElementById("injAmount").value);
   const month = Number(document.getElementById("injMonth").value);
   const privatePercent = Number(document.getElementById("injPrivate").value);
@@ -171,7 +172,13 @@ async function previewInjectionImpact() {
   const bufferPercent = Number(document.getElementById("injBuffer").value);
   const strategy = document.getElementById("injStrategy").value;
 
-  const injection = {
+  if (!amount || !month) {
+    alert("Enter Injection Amount and Month");
+    return;
+  }
+
+  // 🔵 Store as active browser injection
+  currentInjection = {
     month,
     amount,
     privatePercent,
@@ -181,49 +188,41 @@ async function previewInjectionImpact() {
     monthlyPayoutRate: 1
   };
 
-  /* =========================
+  /* ===============================
      CALCULATE PRIVATE BEFORE
-  ========================= */
+  =============================== */
 
   const privateBefore =
     baseState.privateInvestors.reduce((sum, inv) =>
       sum + (inv.principal * (inv.monthlyRate / 100)), 0);
 
-  /* =========================
+  /* ===============================
      CLONE STATE
-  ========================= */
+  =============================== */
 
-  const clonedState = JSON.parse(JSON.stringify(baseState));
+  const clonedInvestors =
+    JSON.parse(JSON.stringify(baseState.privateInvestors));
 
-  /* =========================
-     APPLY INJECTION LOGIC
-  ========================= */
-
-  const privateAlloc =
-    injection.amount * (injection.privatePercent / 100);
-
-  let remaining = privateAlloc;
+  let privateAllocation =
+    amount * (privatePercent / 100);
 
   const sorted =
-    sortInvestorsForPreview(
-      clonedState.privateInvestors,
-      injection.strategy
-    );
+    sortInvestorsForPreview(clonedInvestors, strategy);
 
   let breakdown = [];
 
   sorted.forEach(inv => {
 
-    if (remaining <= 0) return;
+    if (privateAllocation <= 0) return;
     if (inv.type === "locked") return;
 
     const before = inv.principal;
 
     const reduction =
-      Math.min(inv.principal, remaining);
+      Math.min(inv.principal, privateAllocation);
 
     inv.principal -= reduction;
-    remaining -= reduction;
+    privateAllocation -= reduction;
 
     breakdown.push({
       name: inv.name,
@@ -233,16 +232,16 @@ async function previewInjectionImpact() {
     });
   });
 
-  /* =========================
-     PRIVATE AFTER
-  ========================= */
+  /* ===============================
+     CALCULATE PRIVATE AFTER
+  =============================== */
 
   const privateAfter =
-    clonedState.privateInvestors.reduce((sum, inv) =>
+    clonedInvestors.reduce((sum, inv) =>
       sum + (inv.principal * (inv.monthlyRate / 100)), 0);
 
   const injectionPayout =
-    injection.amount * 0.01;
+    amount * 0.01;
 
   const netImpact =
     (privateBefore - privateAfter) - injectionPayout;
@@ -254,8 +253,9 @@ async function previewInjectionImpact() {
     netImpact,
     breakdown
   });
-}
 
+  showActiveInjectionBanner(currentInjection);
+}
 function sortInvestorsForPreview(list, strategy) {
 
   const clone = [...list];

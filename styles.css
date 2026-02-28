@@ -88,3 +88,120 @@ button:hover {
   grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
   gap: 10px;
 }
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f172a;
+  color: #f1f5f9;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: linear-gradient(145deg,#1e293b,#111827);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #38bdf8;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+input, select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: white;
+  font-size: 14px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.primary-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.primary-btn:hover {
+  background: #2563eb;
+}
+
+.danger-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.danger-btn:hover {
+  background: #dc2626;
+}
+
+.success-banner {
+  background: #064e3b;
+  border-left: 5px solid #22c55e;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.warning-banner {
+  background: #4c0519;
+  border-left: 5px solid #f43f5e;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th, td {
+  padding: 8px;
+  border-bottom: 1px solid #334155;
+}
+
+th {
+  background: #1e293b;
+  text-align: left;
+}
+
+.highlight-green {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.highlight-red {
+  color: #ef4444;
+  font-weight: bold;
+}

@@ -323,7 +323,26 @@ function renderInjectionPreview(data) {
     </table>
   `;
 }
+function showActiveInjectionBanner(injection) {
 
+  const container =
+    document.getElementById("activeInjectionBanner");
+
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="success-banner">
+      <strong>Active Injection:</strong><br>
+      ₹ ${(injection.amount/100000).toFixed(2)} L
+      in Month ${injection.month}<br>
+      Strategy: ${injection.strategy}<br>
+      Allocation →
+      Private: ${injection.privatePercent}% |
+      Bank: ${injection.bankPercent}% |
+      Buffer: ${injection.bufferPercent}%
+    </div>
+  `;
+}
 /* ======================================
    RUN SIMULATION
 ====================================== */

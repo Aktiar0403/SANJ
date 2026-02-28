@@ -56,7 +56,106 @@ async function loadBaseState() {
     loans
   };
 }
+async function renderSnapshot() {
 
+  const baseState = await loadBaseState();
+
+  const privateInvestors = baseState.privateInvestors;
+  const loans = baseState.loans;
+
+  const BASE_YEAR_REVENUE = 15000000; // 1.5 Cr
+  const seasonalWeights = [
+    0.7,0.8,1.0,1.4,1.5,1.4,
+    1.2,1.1,1.1,1.0,0.9,0.8
+  ];
+  const totalWeight =
+    seasonalWeights.reduce((a,b)=>a+b,0);
+
+  const avgMonthlyRevenue =
+    BASE_YEAR_REVENUE / 12;
+
+  const worstWeight =
+    Math.min(...seasonalWeights);
+
+  const worstMonthRevenue =
+    (worstWeight / totalWeight) *
+    BASE_YEAR_REVENUE;
+
+  const doctorExpense =
+    avgMonthlyRevenue *
+    (baseState.doctorPercent / 100);
+
+  const cogsExpense =
+    avgMonthlyRevenue *
+    (baseState.cogsPercent / 100);
+
+  const fixedExpense =
+    baseState.fixedExpenses;
+
+  const salaryExpense =
+    baseState.salary;
+
+  const avgOperating =
+    avgMonthlyRevenue -
+    doctorExpense -
+    cogsExpense -
+    fixedExpense -
+    salaryExpense;
+
+  const worstOperating =
+    worstMonthRevenue -
+    (worstMonthRevenue * (baseState.doctorPercent / 100)) -
+    (worstMonthRevenue * (baseState.cogsPercent / 100)) -
+    fixedExpense -
+    salaryExpense;
+
+  const totalPrivatePrincipal =
+    privateInvestors.reduce((s,i)=>s+i.principal,0);
+
+  const totalPrivateInterest =
+    privateInvestors.reduce((s,i)=>
+      s + (i.principal * (i.monthlyRate/100)),0);
+
+  const totalBankPrincipal =
+    loans.reduce((s,l)=>s+l.principal,0);
+
+  const totalBankEMI =
+    loans.reduce((s,l)=>s+(l.monthlyEMI||0),0);
+
+  const totalDebtBurden =
+    totalPrivateInterest + totalBankEMI;
+
+  const structuralResult =
+    worstOperating - totalDebtBurden;
+
+  const status =
+    structuralResult >= 0
+      ? "🟢 Structurally Stable"
+      : "🔴 Structural Deficit";
+
+  document.getElementById("snapshot").innerHTML = `
+    <p><strong>Annual Revenue:</strong> ₹${toLakh(BASE_YEAR_REVENUE)} L</p>
+    <p><strong>Avg Monthly Revenue:</strong> ₹${toLakh(avgMonthlyRevenue)} L</p>
+    <hr>
+    <p><strong>Total Private Principal:</strong> ₹${toLakh(totalPrivatePrincipal)} L</p>
+    <p><strong>Total Private Monthly Interest:</strong> ₹${toLakh(totalPrivateInterest)} L</p>
+    <p><strong>Total Bank Principal:</strong> ₹${toLakh(totalBankPrincipal)} L</p>
+    <p><strong>Total Bank EMI:</strong> ₹${toLakh(totalBankEMI)} L</p>
+    <p><strong>Total Monthly Debt Burden:</strong> ₹${toLakh(totalDebtBurden)} L</p>
+    <hr>
+    <p><strong>Worst Dry Month Operating:</strong> ₹${toLakh(worstOperating)} L</p>
+    <p><strong>Structural Surplus/Deficit:</strong>
+      <span style="color:${structuralResult>=0?'lime':'red'}">
+        ₹${toLakh(structuralResult)} L
+      </span>
+    </p>
+    <p><strong>Status:</strong> ${status}</p>
+  `;
+}
+
+function toLakh(n){
+  return (n / 100000).toFixed(2);
+}
 /* ======================================
    LOAD COMMITTED INJECTIONS
 ====================================== */
@@ -382,6 +481,8 @@ function setCurrentInjection() {
 
 document.addEventListener("DOMContentLoaded",()=>{
 
+
+  renderSnapshot();
   document
     .getElementById("runSimulationBtn")
     ?.addEventListener("click",runSimulation);

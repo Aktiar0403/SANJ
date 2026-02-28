@@ -14,7 +14,7 @@ import {
    GLOBAL STATE
 ====================================== */
 
-let hypotheticalInjections = [];
+let currentInjection = null;
 let cashChart = null;
 
 /* ======================================
@@ -243,14 +243,15 @@ const committedInjections = [];
     document.getElementById("runUntilCollapse")?.checked || false;
 
   const result =
-    simulateBusiness({
-      baseState,
-      committedInjections,
-      hypotheticalInjections,
-      months: 60,
-      runUntilCollapse,
-      growthPercent
-    });
+   simulateBusiness({
+  baseState,
+  committedInjections: [],
+  hypotheticalInjections:
+    currentInjection ? [currentInjection] : [],
+  months: 60,
+  runUntilCollapse,
+  growthPercent
+});
 
   renderTable(result.history);
   renderChart(result.history);
@@ -344,7 +345,7 @@ function renderSummary(result) {
    ADD HYPOTHETICAL INJECTION
 ====================================== */
 
-function addHypotheticalInjection() {
+function setCurrentInjection() {
 
   const amount =
     Number(document.getElementById("injAmount").value);
@@ -364,7 +365,7 @@ function addHypotheticalInjection() {
   const strategy =
     document.getElementById("injStrategy").value;
 
-  hypotheticalInjections.push({
+  currentInjection = {
     month,
     amount,
     privatePercent,
@@ -372,9 +373,7 @@ function addHypotheticalInjection() {
     bufferPercent,
     strategy,
     monthlyPayoutRate: 1
-  });
-
-  alert("Hypothetical Injection Added (Simulation Only)");
+  };
 }
 
 /* ======================================

@@ -61,18 +61,10 @@ async function loadBaseState() {
    LOAD COMMITTED INJECTIONS
 ====================================== */
 
-async function loadCommittedInjections() {
 
-  const snap =
-    await getDocs(collection(db,"capitalInjections"));
-
-  return snap.docs.map(d=>d.data());
-}
 async function previewInjectionImpact() {
 
   const baseState = await loadBaseState();
-  const committedInjections = await loadCommittedInjections();
-
   const amount = Number(document.getElementById("injAmount").value);
   const month = Number(document.getElementById("injMonth").value);
   const privatePercent = Number(document.getElementById("injPrivate").value);
@@ -242,8 +234,7 @@ async function runSimulation() {
   const baseState =
     await loadBaseState();
 
-  const committedInjections =
-    await loadCommittedInjections();
+const committedInjections = [];
 
   const growthPercent =
     Number(document.getElementById("growthInput")?.value || 0);

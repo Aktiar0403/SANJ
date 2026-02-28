@@ -590,7 +590,7 @@ function setCurrentInjection() {
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-renderManualAllocation();
+renderManualAllocationTable();
   renderSnapshot();
   document
     .getElementById("runSimulationBtn")

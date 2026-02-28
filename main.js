@@ -16,6 +16,7 @@ import {
 
 let currentInjection = null;
 let cashChart = null;
+let cachedBaseState = null;
 
 /* ======================================
    LOAD BASE STATE FROM FIREBASE
@@ -46,7 +47,7 @@ async function loadBaseState() {
       ...d.data()
     }));
 
-  return {
+  cachedBaseState = {
     doctorPercent: config.doctorPercent,
     cogsPercent: config.cogsPercent,
     fixedExpenses: config.fixedExpenses,
@@ -55,6 +56,8 @@ async function loadBaseState() {
     privateInvestors,
     loans
   };
+
+  return cachedBaseState;
 }
 async function renderSnapshot() {
 
@@ -163,99 +166,112 @@ function toLakh(n){
 
 async function previewInjectionImpact() {
 
-  const baseState = await loadBaseState();
+  if (!cachedBaseState)
+    await loadBaseState();
 
-  const amount = Number(document.getElementById("injAmount").value);
-  const month = Number(document.getElementById("injMonth").value);
-  const privatePercent = Number(document.getElementById("injPrivate").value);
-  const bankPercent = Number(document.getElementById("injBank").value);
-  const bufferPercent = Number(document.getElementById("injBuffer").value);
-  const strategy = document.getElementById("injStrategy").value;
+  const amount =
+    Number(document.getElementById("injAmount").value);
+
+  const month =
+    Number(document.getElementById("injMonth").value);
 
   if (!amount || !month) {
     alert("Enter Injection Amount and Month");
     return;
   }
 
-  // 🔵 Store as active browser injection
+  const manualAllocations = [];
+
+  document.querySelectorAll(".reduce-input")
+    .forEach(input=>{
+
+      const id = input.dataset.id;
+
+      const reduceAmount =
+        (Number(input.value) || 0) * 100000;
+
+      const skipMonths =
+        Number(document.querySelector(
+          `.skip-input[data-id='${id}']`
+        ).value) || 0;
+
+      const newRate =
+        Number(document.querySelector(
+          `.rate-input[data-id='${id}']`
+        ).value);
+
+      if (reduceAmount > 0) {
+
+        manualAllocations.push({
+          id,
+          reduceAmount,
+          skipMonths,
+          newRate:
+            isNaN(newRate) ? null : newRate
+        });
+      }
+    });
+
   currentInjection = {
     month,
     amount,
-    privatePercent,
-    bankPercent,
-    bufferPercent,
-    strategy,
+    strategy: "manual",
+    manualAllocations,
     monthlyPayoutRate: 1
   };
 
-  /* ===============================
-     CALCULATE PRIVATE BEFORE
-  =============================== */
+  /* CALCULATE BEFORE */
 
   const privateBefore =
-    baseState.privateInvestors.reduce((sum, inv) =>
-      sum + (inv.principal * (inv.monthlyRate / 100)), 0);
+    cachedBaseState.privateInvestors.reduce((s,i)=>
+      s + (i.principal*(i.monthlyRate/100)),0);
 
-  /* ===============================
-     CLONE STATE
-  =============================== */
+  /* CLONE STATE */
 
-  const clonedInvestors =
-    JSON.parse(JSON.stringify(baseState.privateInvestors));
+  const cloned =
+    JSON.parse(JSON.stringify(
+      cachedBaseState.privateInvestors
+    ));
 
-  let privateAllocation =
-    amount * (privatePercent / 100);
+  /* APPLY MANUAL */
 
-  const sorted =
-    sortInvestorsForPreview(clonedInvestors, strategy);
+  manualAllocations.forEach(m=>{
 
-  let breakdown = [];
+    const investor =
+      cloned.find(i=>i.id===m.id);
 
-  sorted.forEach(inv => {
+    if (!investor) return;
 
-    if (privateAllocation <= 0) return;
-    if (inv.type === "locked") return;
+    investor.principal -= m.reduceAmount;
 
-    const before = inv.principal;
-
-    const reduction =
-      Math.min(inv.principal, privateAllocation);
-
-    inv.principal -= reduction;
-    privateAllocation -= reduction;
-
-    breakdown.push({
-      name: inv.name,
-      before,
-      reduced: reduction,
-      after: inv.principal
-    });
+    if (m.newRate !== null)
+      investor.monthlyRate = m.newRate;
   });
 
-  /* ===============================
-     CALCULATE PRIVATE AFTER
-  =============================== */
-
   const privateAfter =
-    clonedInvestors.reduce((sum, inv) =>
-      sum + (inv.principal * (inv.monthlyRate / 100)), 0);
+    cloned.reduce((s,i)=>
+      s + (i.principal*(i.monthlyRate/100)),0);
 
   const injectionPayout =
     amount * 0.01;
 
   const netImpact =
-    (privateBefore - privateAfter) - injectionPayout;
+    (privateBefore - privateAfter)
+    - injectionPayout;
 
   renderInjectionPreview({
     privateBefore,
     privateAfter,
     injectionPayout,
     netImpact,
-    breakdown
+    breakdown: manualAllocations
   });
 
   showActiveInjectionBanner(currentInjection);
 }
+
+
+
 function sortInvestorsForPreview(list, strategy) {
 
   const clone = [...list];
@@ -294,55 +310,129 @@ function renderInjectionPreview(data) {
   const container =
     document.getElementById("injectionPreview");
 
+  const netClass =
+    data.netImpact >= 0
+      ? "highlight-green"
+      : "highlight-red";
+
   container.innerHTML = `
-    <p><strong>Private Interest Before:</strong> ₹${Math.round(data.privateBefore)}</p>
-    <p><strong>Private Interest After:</strong> ₹${Math.round(data.privateAfter)}</p>
-    <p><strong>Injection 1% Payout:</strong> ₹${Math.round(data.injectionPayout)}</p>
+    <p><strong>Private Before:</strong>
+      ₹ ${(data.privateBefore/100000).toFixed(2)} L</p>
+
+    <p><strong>Private After:</strong>
+      ₹ ${(data.privateAfter/100000).toFixed(2)} L</p>
+
+    <p><strong>Injection Payout (1%):</strong>
+      ₹ ${(data.injectionPayout/100000).toFixed(2)} L</p>
+
     <p><strong>Net Monthly Impact:</strong>
-      <span style="color:${data.netImpact >= 0 ? 'lime' : 'red'}">
-        ₹${Math.round(data.netImpact)}
+      <span class="${netClass}">
+        ₹ ${(data.netImpact/100000).toFixed(2)} L
       </span>
     </p>
-
-    <h4>Reduction Breakdown</h4>
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Before</th>
-        <th>Reduced</th>
-        <th>After</th>
-      </tr>
-      ${data.breakdown.map(b=>`
-        <tr>
-          <td>${b.name}</td>
-          <td>₹${Math.round(b.before)}</td>
-          <td>₹${Math.round(b.reduced)}</td>
-          <td>₹${Math.round(b.after)}</td>
-        </tr>
-      `).join("")}
-    </table>
   `;
 }
+
+
 function showActiveInjectionBanner(injection) {
 
   const container =
     document.getElementById("activeInjectionBanner");
 
-  if (!container) return;
-
   container.innerHTML = `
     <div class="success-banner">
-      <strong>Active Injection:</strong><br>
+      <strong>Active Injection Applied</strong><br>
       ₹ ${(injection.amount/100000).toFixed(2)} L
-      in Month ${injection.month}<br>
-      Strategy: ${injection.strategy}<br>
-      Allocation →
-      Private: ${injection.privatePercent}% |
-      Bank: ${injection.bankPercent}% |
-      Buffer: ${injection.bufferPercent}%
+      in Month ${injection.month}
     </div>
   `;
 }
+
+async function renderManualAllocationTable() {
+
+  if (!cachedBaseState)
+    await loadBaseState();
+
+  const investors =
+    cachedBaseState.privateInvestors;
+
+  const container =
+    document.getElementById("manualAllocationTable");
+
+  container.innerHTML = `
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Principal (L)</th>
+        <th>Rate %</th>
+        <th>Reduce (L)</th>
+        <th>Skip Months</th>
+        <th>New Rate %</th>
+      </tr>
+      ${investors.map(inv=>`
+        <tr>
+          <td>${inv.name}</td>
+          <td>${(inv.principal/100000).toFixed(2)}</td>
+          <td>${inv.monthlyRate}</td>
+          <td>
+            <input type="number"
+              class="reduce-input"
+              data-id="${inv.id}"
+              value="0">
+          </td>
+          <td>
+            <input type="number"
+              class="skip-input"
+              data-id="${inv.id}"
+              value="0">
+          </td>
+          <td>
+            <input type="number"
+              class="rate-input"
+              data-id="${inv.id}"
+              placeholder="${inv.monthlyRate}">
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+
+  attachRemainingListener();
+}
+
+
+function updateRemainingInjection() {
+
+  const totalInjection =
+    Number(document.getElementById("injAmount").value) || 0;
+
+  let totalAllocated = 0;
+
+  document.querySelectorAll(".reduce-input")
+    .forEach(input=>{
+      totalAllocated +=
+        (Number(input.value) || 0) * 100000;
+    });
+
+  const remaining =
+    totalInjection - totalAllocated;
+
+  document.getElementById("remainingInjection")
+    .innerText =
+      `₹ ${(remaining/100000).toFixed(2)} L`;
+}
+
+
+function attachRemainingListener() {
+
+  document.querySelectorAll(".reduce-input")
+    .forEach(input=>{
+      input.addEventListener("input",
+        updateRemainingInjection
+      );
+    });
+}
+
 /* ======================================
    RUN SIMULATION
 ====================================== */
@@ -500,7 +590,7 @@ function setCurrentInjection() {
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-
+renderManualAllocation();
   renderSnapshot();
   document
     .getElementById("runSimulationBtn")
@@ -510,4 +600,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     .getElementById("previewInjectionBtn")
     ?.addEventListener("click", previewInjectionImpact);
 
+});
+
+document.addEventListener("input", e=>{
+  if (e.target.classList.contains("reduce-input")) {
+    updateRemainingInjection();
+  }
 });

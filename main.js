@@ -7,164 +7,233 @@ import {
 } from "./firebase.js";
 
 import {
-  generateSeasonalRevenue,
-  calculateBusiness
-} from "./engines/businessEngine.js";
+  simulateBusiness
+} from "./engine/simulationEngine.js";
 
-import {
-  processBankLoans,
-  processInjectionPayout
-} from "./engines/debtEngine.js";
+/* ======================================
+   GLOBAL STATE
+====================================== */
 
-import {
-  processPrivateInterest
-} from "./engines/privateEngine.js";
+let hypotheticalInjections = [];
+let cashChart = null;
 
-import {
-  applyInjection
-} from "./engines/injectionEngine.js";
+/* ======================================
+   LOAD BASE STATE FROM FIREBASE
+====================================== */
 
-/* =============================
-   SIMULATION
-============================= */
-
-async function runSimulation(){
+async function loadBaseState() {
 
   const configSnap =
     await getDoc(doc(db,"businessConfig","main"));
 
   const config = configSnap.data();
 
-  const loansSnap =
-    await getDocs(collection(db,"loans"));
-
-  const loans =
-    loansSnap.docs.map(d=>({...d.data()}));
-
   const invSnap =
     await getDocs(collection(db,"privateInvestors"));
 
   const privateInvestors =
-    invSnap.docs.map(d=>({...d.data()}));
+    invSnap.docs.map(d=>({
+      id:d.id,
+      ...d.data()
+    }));
 
-  const injSnap =
+  const loanSnap =
+    await getDocs(collection(db,"loans"));
+
+  const loans =
+    loanSnap.docs.map(d=>({
+      id:d.id,
+      ...d.data()
+    }));
+
+  return {
+    doctorPercent: config.doctorPercent,
+    cogsPercent: config.cogsPercent,
+    fixedExpenses: config.fixedExpenses,
+    salary: config.salary,
+    openingCash: config.openingCash || 0,
+    privateInvestors,
+    loans
+  };
+}
+
+/* ======================================
+   LOAD COMMITTED INJECTIONS
+====================================== */
+
+async function loadCommittedInjections() {
+
+  const snap =
     await getDocs(collection(db,"capitalInjections"));
 
-  const injections =
-    injSnap.docs.map(d=>d.data());
+  return snap.docs.map(d=>d.data());
+}
 
-  const seasonal =
-    generateSeasonalRevenue(15000000);
+/* ======================================
+   RUN SIMULATION
+====================================== */
 
-  let cash = config.openingCash;
-  let history = [];
+async function runSimulation() {
 
-  for(let m=0;m<36;m++){
+  const baseState =
+    await loadBaseState();
 
-    const date =
-      new Date(config.startDate);
+  const committedInjections =
+    await loadCommittedInjections();
 
-    date.setMonth(date.getMonth()+m);
+  const growthPercent =
+    Number(document.getElementById("growthInput")?.value || 0);
 
-    const monthIndex =
-      date.getMonth();
+  const runUntilCollapse =
+    document.getElementById("runUntilCollapse")?.checked || false;
 
-    const billing =
-      seasonal[monthIndex];
-
-    const business =
-      calculateBusiness(billing,config);
-
-    cash += business.operating;
-
-    const totalEMI =
-      processBankLoans(loans);
-
-    cash -= totalEMI;
-
-    const privateInterest =
-      processPrivateInterest(
-        privateInvestors,
-        m+1
-      );
-
-    cash -= privateInterest;
-
-    const injectionPayout =
-      processInjectionPayout(
-        injections,
-        m+1
-      );
-
-    cash -= injectionPayout;
-
-    cash = applyInjection(
-      m+1,
-      injections,
-      loans,
-      privateInvestors,
-      cash
-    );
-
-    history.push({
-      month:m+1,
-      billing,
-      operating:business.operating,
-      EMI:totalEMI,
-      privateInterest,
-      injectionPayout,
-      cash
+  const result =
+    simulateBusiness({
+      baseState,
+      committedInjections,
+      hypotheticalInjections,
+      months: 60,
+      runUntilCollapse,
+      growthPercent
     });
 
-    if(cash<0){
-      history.push({
-        month:"⚠ COLLAPSE",
-        cash
-      });
-      break;
-    }
-  }
-
-  renderDashboard(history);
+  renderTable(result.history);
+  renderChart(result.history);
+  renderSummary(result);
 }
 
-/* =============================
-   DASHBOARD
-============================= */
+/* ======================================
+   RENDER TABLE
+====================================== */
 
-function renderDashboard(data){
+function renderTable(history) {
 
   const container =
-    document.getElementById("dashboard");
+    document.getElementById("simulationTable");
 
-  container.innerHTML =
-    data.map(row=>`
-      <div style="padding:6px;border-bottom:1px solid #334155">
-        <strong>${row.month}</strong><br>
-        Billing: ₹${Math.round(row.billing||0)}<br>
-        Operating: ₹${Math.round(row.operating||0)}<br>
-        EMI: ₹${Math.round(row.EMI||0)}<br>
-        Private: ₹${Math.round(row.privateInterest||0)}<br>
-        Injection Payout: ₹${Math.round(row.injectionPayout||0)}<br>
-        Cash: ₹${Math.round(row.cash||0)}
-      </div>
-    `).join("");
+  container.innerHTML = history.map(row=>`
+    <tr>
+      <td>${row.monthIndex}</td>
+      <td>₹${row.billing}</td>
+      <td>₹${row.totalBusinessExpense}</td>
+      <td>₹${row.bankEMI}</td>
+      <td>₹${row.privateInterest}</td>
+      <td>₹${row.injectionPayout}</td>
+      <td>₹${row.cash}</td>
+      <td>${row.stabilityStatus}</td>
+    </tr>
+  `).join("");
 }
 
-/* =============================
+/* ======================================
+   RENDER CASH GRAPH
+====================================== */
+
+function renderChart(history) {
+
+  const ctx =
+    document.getElementById("cashChart").getContext("2d");
+
+  const labels =
+    history.map(h=>h.monthIndex);
+
+  const cashData =
+    history.map(h=>h.cash);
+
+  if (cashChart) {
+    cashChart.destroy();
+  }
+
+  cashChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Cash",
+        data: cashData,
+        borderWidth: 2,
+        tension: 0.2
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: false
+        }
+      }
+    }
+  });
+}
+
+/* ======================================
+   RENDER SUMMARY
+====================================== */
+
+function renderSummary(result) {
+
+  const summary =
+    document.getElementById("summary");
+
+  summary.innerHTML = `
+    <p><strong>Final Cash:</strong> ₹${result.finalCash}</p>
+    <p><strong>Collapse Month:</strong> ${
+      result.collapseMonth || "None"
+    }</p>
+    <p><strong>Final Private Principal:</strong> ₹${result.finalPrivatePrincipal}</p>
+    <p><strong>Final Bank Principal:</strong> ₹${result.finalBankPrincipal}</p>
+  `;
+}
+
+/* ======================================
+   ADD HYPOTHETICAL INJECTION
+====================================== */
+
+function addHypotheticalInjection() {
+
+  const amount =
+    Number(document.getElementById("injAmount").value);
+
+  const month =
+    Number(document.getElementById("injMonth").value);
+
+  const privatePercent =
+    Number(document.getElementById("injPrivate").value);
+
+  const bankPercent =
+    Number(document.getElementById("injBank").value);
+
+  const bufferPercent =
+    Number(document.getElementById("injBuffer").value);
+
+  const strategy =
+    document.getElementById("injStrategy").value;
+
+  hypotheticalInjections.push({
+    month,
+    amount,
+    privatePercent,
+    bankPercent,
+    bufferPercent,
+    strategy,
+    monthlyPayoutRate: 1
+  });
+
+  alert("Hypothetical Injection Added (Simulation Only)");
+}
+
+/* ======================================
    INIT
-============================= */
+====================================== */
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-  const runBtn =
-    document.getElementById("runSim");
+  document
+    .getElementById("runSimulationBtn")
+    ?.addEventListener("click",runSimulation);
 
-  if(runBtn){
-    runBtn.addEventListener(
-      "click",
-      runSimulation
-    );
-  }
+  document
+    .getElementById("addHypotheticalBtn")
+    ?.addEventListener("click",addHypotheticalInjection);
 
 });

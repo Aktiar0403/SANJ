@@ -8,7 +8,7 @@ import {
 
 import {
   simulateBusiness
-} from "./engine/simulationEngine.js";
+} from "./engines/simulationEngine.js";
 
 /* ======================================
    GLOBAL STATE

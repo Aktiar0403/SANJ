@@ -6,21 +6,25 @@ import {
   getDoc
 } from "./firebase.js";
 
-import {
-  simulateBusiness
-} from "./engines/simulationEngine.js";
-
-/* ======================================
+/* ==========================================
    GLOBAL STATE
-====================================== */
+========================================== */
 
+let cachedBaseState = null;
 let currentInjection = null;
 let cashChart = null;
-let cachedBaseState = null;
 
-/* ======================================
-   LOAD BASE STATE FROM FIREBASE
-====================================== */
+/* ==========================================
+   HELPER: SAFE NUMBER
+========================================== */
+
+function safe(n) {
+  return Number(n) || 0;
+}
+
+/* ==========================================
+   LOAD BASE STATE FROM FIRESTORE
+========================================== */
 
 async function loadBaseState() {
 
@@ -28,613 +32,426 @@ async function loadBaseState() {
     await getDoc(doc(db,"businessConfig","main"));
 
   if (!configSnap.exists()) {
-    throw new Error(
-      "Missing Firestore document: businessConfig/main"
-    );
+    throw new Error("businessConfig/main missing in Firestore");
   }
 
-  const config = configSnap.data() || {};
+  const config = configSnap.data();
 
   const invSnap =
     await getDocs(collection(db,"privateInvestors"));
 
   const privateInvestors =
-    invSnap.docs.map(d=>({
-      id:d.id,
+    invSnap.docs.map(d => ({
+      id: d.id,
       ...d.data(),
-      principal: Number(d.data().principal) || 0,
-      monthlyRate: Number(d.data().monthlyRate) || 0
+      principal: safe(d.data().principal),
+      monthlyRate: safe(d.data().monthlyRate),
+      type: d.data().type || "flexible",
+      minLockedPrincipal: safe(d.data().minLockedPrincipal)
     }));
 
   const loanSnap =
     await getDocs(collection(db,"loans"));
 
-  const loans =
-    loanSnap.docs.map(d=>({
-      id:d.id,
+  const bankLoans =
+    loanSnap.docs.map(d => ({
+      id: d.id,
       ...d.data(),
-      principal: Number(d.data().principal) || 0,
-      monthlyEMI: Number(d.data().monthlyEMI) || 0
+      principal: safe(d.data().principal),
+      monthlyEMI: safe(d.data().monthlyEMI)
     }));
 
   cachedBaseState = {
-    doctorPercent: Number(config.doctorPercent) || 0,
-    cogsPercent: Number(config.cogsPercent) || 0,
-    fixedExpenses: Number(config.fixedExpenses) || 0,
-    salary: Number(config.salary) || 0,
-    openingCash: Number(config.openingCash) || 0,
+    doctorPercent: safe(config.doctorPercent),
+    cogsPercent: safe(config.cogsPercent),
+    fixedExpenses: safe(config.fixedExpenses),
+    salary: safe(config.salary),
+    openingCash: safe(config.openingCash),
     privateInvestors,
-    loans
+    bankLoans
   };
 
   return cachedBaseState;
 }
-async function renderSnapshot() {
 
-  const baseState = await loadBaseState();
+/* ==========================================
+   PURE FINANCIAL SIMULATION ENGINE
+========================================== */
 
-  const privateInvestors = baseState.privateInvestors;
-  const loans = baseState.loans;
+function simulateFinancialModel({
+  baseState,
+  injections = [],
+  months = 60,
+  growthPercent = 0,
+  runUntilCollapse = false
+}) {
 
-  const BASE_YEAR_REVENUE = 15000000; // 1.5 Cr
-  const seasonalWeights = [
-    0.7,0.8,1.0,1.4,1.5,1.4,
-    1.2,1.1,1.1,1.0,0.9,0.8
-  ];
-  const totalWeight =
-    seasonalWeights.reduce((a,b)=>a+b,0);
+  let state =
+    JSON.parse(JSON.stringify(baseState));
 
-  const avgMonthlyRevenue =
-    BASE_YEAR_REVENUE / 12;
+  let cash = safe(state.openingCash);
 
-  const worstWeight =
-    Math.min(...seasonalWeights);
+  const history = [];
 
-  const worstMonthRevenue =
-    (worstWeight / totalWeight) *
-    BASE_YEAR_REVENUE;
+  for (let monthIndex = 1;
+       monthIndex <= months;
+       monthIndex++) {
 
-  const doctorExpense =
-    avgMonthlyRevenue *
-    (baseState.doctorPercent / 100);
+    // 1️⃣ Revenue Model
+    const baseAnnual = 15000000; // 1.5 Cr baseline
+    const baseMonthly =
+      baseAnnual / 12;
 
-  const cogsExpense =
-    avgMonthlyRevenue *
-    (baseState.cogsPercent / 100);
+    const growthFactor =
+      Math.pow(
+        1 + growthPercent/100,
+        monthIndex - 1
+      );
 
-  const fixedExpense =
-    baseState.fixedExpenses;
+    const billing =
+      baseMonthly * growthFactor;
 
-  const salaryExpense =
-    baseState.salary;
+    // 2️⃣ Operating Profit
+    const doctorCost =
+      billing *
+      (state.doctorPercent / 100);
 
-  const avgOperating =
-    avgMonthlyRevenue -
-    doctorExpense -
-    cogsExpense -
-    fixedExpense -
-    salaryExpense;
+    const cogs =
+      billing *
+      (state.cogsPercent / 100);
 
-  const worstOperating =
-    worstMonthRevenue -
-    (worstMonthRevenue * (baseState.doctorPercent / 100)) -
-    (worstMonthRevenue * (baseState.cogsPercent / 100)) -
-    fixedExpense -
-    salaryExpense;
+    const operating =
+      billing -
+      doctorCost -
+      cogs -
+      state.fixedExpenses -
+      state.salary;
 
-  const totalPrivatePrincipal =
-    privateInvestors.reduce((s,i)=>s+i.principal,0);
+    cash += operating;
 
-  const totalPrivateInterest =
-    privateInvestors.reduce((s,i)=>
-      s + (i.principal * (i.monthlyRate/100)),0);
+    // 3️⃣ Bank EMI
+    let totalBankEMI = 0;
 
-  const totalBankPrincipal =
-    loans.reduce((s,l)=>s+l.principal,0);
+    state.bankLoans.forEach(loan => {
+      totalBankEMI += loan.monthlyEMI;
+      loan.principal =
+        Math.max(
+          0,
+          loan.principal -
+          loan.monthlyEMI
+        );
+    });
 
-  const totalBankEMI =
-    loans.reduce((s,l)=>s+(l.monthlyEMI||0),0);
+    cash -= totalBankEMI;
 
-  const totalDebtBurden =
-    totalPrivateInterest + totalBankEMI;
+    // 4️⃣ Private Interest
+    let totalPrivateInterest = 0;
 
-  const structuralResult =
-    worstOperating - totalDebtBurden;
+    state.privateInvestors.forEach(inv => {
+      const interest =
+        inv.principal *
+        (inv.monthlyRate / 100);
 
-  const status =
-    structuralResult >= 0
-      ? "🟢 Structurally Stable"
-      : "🔴 Structural Deficit";
+      totalPrivateInterest += interest;
+    });
 
-  document.getElementById("snapshot").innerHTML = `
-    <p><strong>Annual Revenue:</strong> ₹${toLakh(BASE_YEAR_REVENUE)} L</p>
-    <p><strong>Avg Monthly Revenue:</strong> ₹${toLakh(avgMonthlyRevenue)} L</p>
-    <hr>
-    <p><strong>Total Private Principal:</strong> ₹${toLakh(totalPrivatePrincipal)} L</p>
-    <p><strong>Total Private Monthly Interest:</strong> ₹${toLakh(totalPrivateInterest)} L</p>
-    <p><strong>Total Bank Principal:</strong> ₹${toLakh(totalBankPrincipal)} L</p>
-    <p><strong>Total Bank EMI:</strong> ₹${toLakh(totalBankEMI)} L</p>
-    <p><strong>Total Monthly Debt Burden:</strong> ₹${toLakh(totalDebtBurden)} L</p>
-    <hr>
-    <p><strong>Worst Dry Month Operating:</strong> ₹${toLakh(worstOperating)} L</p>
-    <p><strong>Structural Surplus/Deficit:</strong>
-      <span style="color:${structuralResult>=0?'lime':'red'}">
-        ₹${toLakh(structuralResult)} L
-      </span>
-    </p>
-    <p><strong>Status:</strong> ${status}</p>
-  `;
-}
+    cash -= totalPrivateInterest;
 
-function toLakh(n){
-  return (n / 100000).toFixed(2);
-}
-/* ======================================
-   LOAD COMMITTED INJECTIONS
-====================================== */
+    // 5️⃣ Apply Injection
+    injections
+      .filter(inj =>
+        inj.month === monthIndex
+      )
+      .forEach(inj => {
 
+        const privateAlloc =
+          inj.amount *
+          (inj.allocation.private / 100);
 
-async function previewInjectionImpact() {
+        const bankAlloc =
+          inj.amount *
+          (inj.allocation.bank / 100);
 
-  if (!cachedBaseState)
-    await loadBaseState();
+        const bufferAlloc =
+          inj.amount *
+          (inj.allocation.buffer / 100);
 
-  const amountL =
-    Number(document.getElementById("injAmount")?.value) || 0;
+        // Reduce private
+        let remainingPrivate =
+          privateAlloc;
 
-  const month =
-    Number(document.getElementById("injMonth")?.value) || 0;
+        state.privateInvestors
+          .forEach(inv => {
 
-  if (!amountL || !month) {
-    alert("Enter Injection Amount and Month");
-    return;
+          if (remainingPrivate <= 0)
+            return;
+
+          let reducible =
+            inv.principal;
+
+          if (inv.type === "partial") {
+            reducible =
+              inv.principal -
+              inv.minLockedPrincipal;
+          }
+
+          reducible =
+            Math.max(0,reducible);
+
+          const reduction =
+            Math.min(
+              reducible,
+              remainingPrivate
+            );
+
+          inv.principal -= reduction;
+          remainingPrivate -= reduction;
+        });
+
+        // Reduce bank
+        let remainingBank =
+          bankAlloc;
+
+        state.bankLoans
+          .forEach(loan => {
+
+          if (remainingBank <= 0)
+            return;
+
+          const reduction =
+            Math.min(
+              loan.principal,
+              remainingBank
+            );
+
+          loan.principal -= reduction;
+          remainingBank -= reduction;
+        });
+
+        // Buffer
+        cash += bufferAlloc;
+      });
+
+    const collapse =
+      cash < 0;
+
+    history.push({
+      monthIndex,
+      billing,
+      operating,
+      totalBankEMI,
+      totalPrivateInterest,
+      cash,
+      collapse
+    });
+
+    if (collapse &&
+        runUntilCollapse)
+      break;
   }
 
-  // Convert Lakh → Rupees
-  const amount = amountL * 100000;
+  return {
+    history,
+    finalCash: cash,
+    collapseMonth:
+      history.find(h=>h.collapse)
+      ?.monthIndex || null,
+    finalPrivatePrincipal:
+      state.privateInvestors
+        .reduce((s,i)=>
+          s+i.principal,0),
+    finalBankPrincipal:
+      state.bankLoans
+        .reduce((s,l)=>
+          s+l.principal,0)
+  };
+}
 
-  // Read percentage inputs safely
+/* ==========================================
+   BUILD INJECTION OBJECT
+========================================== */
+
+function buildInjectionFromUI() {
+
+  const month =
+    safe(document
+      .getElementById("injMonth")
+      ?.value);
+
+  const amountL =
+    safe(document
+      .getElementById("injAmount")
+      ?.value);
+
   const privatePercent =
-    Number(document.getElementById("injPrivate")?.value) || 0;
+    safe(document
+      .getElementById("injPrivate")
+      ?.value);
 
   const bankPercent =
-    Number(document.getElementById("injBank")?.value) || 0;
+    safe(document
+      .getElementById("injBank")
+      ?.value);
 
   const bufferPercent =
-    Number(document.getElementById("injBuffer")?.value) || 0;
+    safe(document
+      .getElementById("injBuffer")
+      ?.value);
 
-  // Compute allocations safely
-  const privateAlloc = amount * (privatePercent / 100);
-  const bankAlloc = amount * (bankPercent / 100);
-  const bufferAlloc = amount * (bufferPercent / 100);
-
-  const privateBefore =
-    cachedBaseState.privateInvestors.reduce(
-      (s,i)=> s + (i.principal * (i.monthlyRate/100)), 0
-    );
-
-  const privateAfter = privateBefore - privateAlloc;
-
-  const injectionPayout =
-    amount * 0.01; // 1% payout assumption
-
-  const netImpact =
-    (privateBefore - privateAfter) - injectionPayout;
+  const amount =
+    amountL * 100000;
 
   currentInjection = {
     month,
     amount,
-    privatePercent,
-    bankPercent,
-    bufferPercent,
-    strategy: "percentage",
-    monthlyPayoutRate: 1
+    allocation: {
+      private: privatePercent,
+      bank: bankPercent,
+      buffer: bufferPercent
+    }
   };
-
-  renderInjectionPreview({
-    privateBefore,
-    privateAfter,
-    injectionPayout,
-    netImpact
-  });
-
-  showActiveInjectionBanner(currentInjection);
 }
 
+/* ==========================================
+   REAL-TIME PREVIEW
+========================================== */
 
-function sortInvestorsForPreview(list, strategy) {
-
-  const clone = [...list];
-
-  switch(strategy) {
-
-    case "pressure_first":
-      return clone.sort((a,b)=>
-        a.type === "pressure" ? -1 : 1
-      );
-
-    case "negotiable_first":
-      return clone.sort((a,b)=>
-        a.type === "negotiable" ? -1 : 1
-      );
-
-    case "highest_interest_first":
-      return clone.sort((a,b)=>
-        b.monthlyRate - a.monthlyRate
-      );
-
-    case "priority_level_first":
-      return clone.sort((a,b)=>
-        (a.priorityLevel||1) -
-        (b.priorityLevel||1)
-      );
-
-    default:
-      return clone;
-  }
-}
-
-
-function renderInjectionPreview(data) {
-
-  const container =
-    document.getElementById("injectionPreview");
-
-  if (!container) return;
-
-  const privateBefore = Number(data.privateBefore) || 0;
-  const privateAfter = Number(data.privateAfter ?? privateBefore) || 0;
-  const injectionPayout = Number(data.injectionPayout) || 0;
-
-  const netImpact =
-    Number(data.netImpact ??
-      (privateBefore - privateAfter - injectionPayout)) || 0;
-
-  const netClass =
-    netImpact >= 0
-      ? "highlight-green"
-      : "highlight-red";
-
-  container.innerHTML = `
-    <p><strong>Private Before:</strong>
-      ₹ ${(privateBefore/100000).toFixed(2)} L</p>
-
-    <p><strong>Private After:</strong>
-      ₹ ${(privateAfter/100000).toFixed(2)} L</p>
-
-    <p><strong>Injection Payout (1%):</strong>
-      ₹ ${(injectionPayout/100000).toFixed(2)} L</p>
-
-    <p><strong>Net Monthly Impact:</strong>
-      <span class="${netClass}">
-        ₹ ${(netImpact/100000).toFixed(2)} L
-      </span>
-    </p>
-  `;
-}
-
-
-function showActiveInjectionBanner(injection) {
-
-  const container =
-    document.getElementById("activeInjectionBanner");
-
-  container.innerHTML = `
-    <div class="success-banner">
-      <strong>Active Injection Applied</strong><br>
-      ₹ ${(injection.amount/100000).toFixed(2)} L
-      in Month ${injection.month}
-    </div>
-  `;
-}
-
-async function renderManualPrivateTable() {
+async function previewInjection() {
 
   if (!cachedBaseState)
     await loadBaseState();
 
-  const investors =
-    cachedBaseState.privateInvestors;
+  buildInjectionFromUI();
 
-  const container =
-    document.getElementById("manualPrivateTable");
-
-  container.innerHTML = `
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Principal (L)</th>
-        <th>Rate %</th>
-        <th>Reduce (L)</th>
-        <th>Skip (Months)</th>
-        <th>New Rate %</th>
-      </tr>
-      ${investors.map(inv=>`
-        <tr>
-          <td>${inv.name}</td>
-          <td>${(inv.principal/100000).toFixed(2)}</td>
-          <td>${inv.monthlyRate}</td>
-          <td>
-            <input type="number"
-              class="private-reduce"
-              data-id="${inv.id}"
-              value="0">
-          </td>
-          <td>
-            <input type="number"
-              class="private-skip"
-              data-id="${inv.id}"
-              value="0">
-          </td>
-          <td>
-            <input type="number"
-              class="private-rate"
-              data-id="${inv.id}"
-              placeholder="${inv.monthlyRate}">
-          </td>
-        </tr>
-      `).join("")}
-    </table>
-  `;
-
-  attachRemainingListener();
-}
-
-async function renderManualBankTable() {
-
-  if (!cachedBaseState)
-    await loadBaseState();
-
-  const loans =
-    cachedBaseState.loans;
-
-  const container =
-    document.getElementById("manualBankTable");
-
-  container.innerHTML = `
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Principal (L)</th>
-        <th>EMI (L)</th>
-        <th>Reduce (L)</th>
-      </tr>
-      ${loans.map(loan=>`
-        <tr>
-          <td>${loan.name}</td>
-          <td>${(loan.principal/100000).toFixed(2)}</td>
-          <td>${((loan.monthlyEMI||0)/100000).toFixed(2)}</td>
-          <td>
-            <input type="number"
-              class="bank-reduce"
-              data-id="${loan.id}"
-              value="0">
-          </td>
-        </tr>
-      `).join("")}
-    </table>
-  `;
-
-  attachRemainingListener();
-}
-
-
-function updateRemainingInjection() {
-
-  const totalInjectionL =
-    Number(document.getElementById("injAmount").value) || 0;
-
-  let totalAllocatedL = 0;
-
-  document.querySelectorAll(".private-reduce")
-    .forEach(input=>{
-      totalAllocatedL +=
-        Number(input.value) || 0;
+  const result =
+    simulateFinancialModel({
+      baseState: cachedBaseState,
+      injections:
+        currentInjection
+        ? [currentInjection]
+        : [],
+      months: 12
     });
-
-  document.querySelectorAll(".bank-reduce")
-    .forEach(input=>{
-      totalAllocatedL +=
-        Number(input.value) || 0;
-    });
-
-  const remainingL =
-    totalInjectionL - totalAllocatedL;
-
-  document.getElementById("remainingInjection")
-    .innerText =
-      `₹ ${remainingL.toFixed(2)} L`;
-}
-
-
-function attachRemainingListener() {
 
   document
-    .querySelectorAll(".private-reduce, .bank-reduce")
-    .forEach(input=>{
-      input.addEventListener("input",
-        updateRemainingInjection
-      );
-    });
+    .getElementById("injectionPreview")
+    .innerHTML = `
+      <p><strong>Cash After 12 Months:</strong>
+      ₹ ${(result.finalCash/100000)
+        .toFixed(2)} L</p>
+      <p><strong>Collapse Month:</strong>
+      ${result.collapseMonth || "None"}</p>
+    `;
 }
 
-/* ======================================
-   RUN SIMULATION
-====================================== */
+/* ==========================================
+   RUN FULL SIMULATION
+========================================== */
 
 async function runSimulation() {
 
-  const baseState =
+  if (!cachedBaseState)
     await loadBaseState();
 
-const committedInjections = [];
+  buildInjectionFromUI();
 
   const growthPercent =
-    Number(document.getElementById("growthInput")?.value || 0);
-
-  const runUntilCollapse =
-    document.getElementById("runUntilCollapse")?.checked || false;
+    safe(document
+      .getElementById("growthInput")
+      ?.value);
 
   const result =
-   simulateBusiness({
-  baseState,
-  committedInjections: [],
-  hypotheticalInjections:
-    currentInjection ? [currentInjection] : [],
-  months: 60,
-  runUntilCollapse,
-  growthPercent
-});
+    simulateFinancialModel({
+      baseState: cachedBaseState,
+      injections:
+        currentInjection
+        ? [currentInjection]
+        : [],
+      months: 60,
+      growthPercent
+    });
 
   renderTable(result.history);
-  renderChart(result.history);
   renderSummary(result);
 }
 
-/* ======================================
-   RENDER TABLE
-====================================== */
+/* ==========================================
+   TABLE RENDER
+========================================== */
 
 function renderTable(history) {
 
   const container =
-    document.getElementById("simulationTable");
+    document
+      .getElementById("simulationTable");
 
-  container.innerHTML = history.map(row=>`
-    <tr>
-      <td>${row.monthIndex}</td>
-      <td>₹${row.billing}</td>
-      <td>₹${row.totalBusinessExpense}</td>
-      <td>₹${row.bankEMI}</td>
-      <td>₹${row.privateInterest}</td>
-      <td>₹${row.injectionPayout}</td>
-      <td>₹${row.cash}</td>
-      <td>${row.stabilityStatus}</td>
-    </tr>
-  `).join("");
+  container.innerHTML =
+    history.map(row=>`
+      <tr>
+        <td>${row.monthIndex}</td>
+        <td>₹${(row.billing/100000)
+          .toFixed(2)} L</td>
+        <td>₹${(row.operating/100000)
+          .toFixed(2)} L</td>
+        <td>₹${(row.totalBankEMI/100000)
+          .toFixed(2)} L</td>
+        <td>₹${(row.totalPrivateInterest/100000)
+          .toFixed(2)} L</td>
+        <td>₹${(row.cash/100000)
+          .toFixed(2)} L</td>
+        <td>${row.collapse
+          ? "🔴 Collapse"
+          : "🟢 Stable"}</td>
+      </tr>
+    `).join("");
 }
 
-/* ======================================
-   RENDER CASH GRAPH
-====================================== */
-
-function renderChart(history) {
-
-  const ctx =
-    document.getElementById("cashChart").getContext("2d");
-
-  const labels =
-    history.map(h=>h.monthIndex);
-
-  const cashData =
-    history.map(h=>h.cash);
-
-  if (cashChart) {
-    cashChart.destroy();
-  }
-
-  cashChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: "Cash",
-        data: cashData,
-        borderWidth: 2,
-        tension: 0.2
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: false
-        }
-      }
-    }
-  });
-}
-
-/* ======================================
-   RENDER SUMMARY
-====================================== */
+/* ==========================================
+   SUMMARY
+========================================== */
 
 function renderSummary(result) {
 
-  const summary =
-    document.getElementById("summary");
-
-  summary.innerHTML = `
-    <p><strong>Final Cash:</strong> ₹${result.finalCash}</p>
-    <p><strong>Collapse Month:</strong> ${
-      result.collapseMonth || "None"
-    }</p>
-    <p><strong>Final Private Principal:</strong> ₹${result.finalPrivatePrincipal}</p>
-    <p><strong>Final Bank Principal:</strong> ₹${result.finalBankPrincipal}</p>
-  `;
+  document
+    .getElementById("summary")
+    .innerHTML = `
+      <p><strong>Final Cash:</strong>
+      ₹ ${(result.finalCash/100000)
+        .toFixed(2)} L</p>
+      <p><strong>Collapse Month:</strong>
+      ${result.collapseMonth || "None"}</p>
+      <p><strong>Remaining Private Principal:</strong>
+      ₹ ${(result.finalPrivatePrincipal/100000)
+        .toFixed(2)} L</p>
+      <p><strong>Remaining Bank Principal:</strong>
+      ₹ ${(result.finalBankPrincipal/100000)
+        .toFixed(2)} L</p>
+    `;
 }
 
-/* ======================================
- INJECTION
-====================================== */
-
-function setCurrentInjection() {
-
-  const amountL =
-    Number(document.getElementById("injAmount")?.value) || 0;
-
-  const month =
-    Number(document.getElementById("injMonth")?.value) || 0;
-
-  const privatePercent =
-    Number(document.getElementById("injPrivate")?.value) || 0;
-
-  const bankPercent =
-    Number(document.getElementById("injBank")?.value) || 0;
-
-  const bufferPercent =
-    Number(document.getElementById("injBuffer")?.value) || 0;
-
-  const strategy =
-    document.getElementById("injStrategy")?.value || "manual";
-
-  // Convert Lakh → Rupees (CRITICAL FIX)
-  const amount = amountL * 100000;
-
-  currentInjection = {
-    month,
-    amount,
-    privatePercent,
-    bankPercent,
-    bufferPercent,
-    strategy,
-    monthlyPayoutRate: 1
-  };
-}
-
-/* ======================================
+/* ==========================================
    INIT
-====================================== */
+========================================== */
 
-document.addEventListener("DOMContentLoaded",()=>{
+document
+  .addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
+      await loadBaseState();
 
+      document
+        .getElementById("previewInjectionBtn")
+        ?.addEventListener(
+          "click",
+          previewInjection
+        );
 
-  renderSnapshot();
-  renderManualPrivateTable();
-  renderManualBankTable();
-  document
-    .getElementById("runSimulationBtn")
-    ?.addEventListener("click",runSimulation);
-
-  document
-    .getElementById("previewInjectionBtn")
-    ?.addEventListener("click", previewInjectionImpact);
-
-});
-
-document.addEventListener("input", e=>{
-  if (e.target.classList.contains("reduce-input")) {
-    updateRemainingInjection();
-  }
-});
+      document
+        .getElementById("runSimulationBtn")
+        ?.addEventListener(
+          "click",
+          runSimulation
+        );
+    }
+);

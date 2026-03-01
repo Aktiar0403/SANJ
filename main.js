@@ -607,8 +607,11 @@ function setCurrentInjection() {
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-renderManualAllocationTable();
+
+
   renderSnapshot();
+  renderManualPrivateTable();
+  renderManualBankTable();
   document
     .getElementById("runSimulationBtn")
     ?.addEventListener("click",runSimulation);

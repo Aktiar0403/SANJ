@@ -27,7 +27,13 @@ async function loadBaseState() {
   const configSnap =
     await getDoc(doc(db,"businessConfig","main"));
 
-  const config = configSnap.data();
+  if (!configSnap.exists()) {
+    throw new Error(
+      "Missing Firestore document: businessConfig/main"
+    );
+  }
+
+  const config = configSnap.data() || {};
 
   const invSnap =
     await getDocs(collection(db,"privateInvestors"));
@@ -35,7 +41,9 @@ async function loadBaseState() {
   const privateInvestors =
     invSnap.docs.map(d=>({
       id:d.id,
-      ...d.data()
+      ...d.data(),
+      principal: Number(d.data().principal) || 0,
+      monthlyRate: Number(d.data().monthlyRate) || 0
     }));
 
   const loanSnap =
@@ -44,15 +52,17 @@ async function loadBaseState() {
   const loans =
     loanSnap.docs.map(d=>({
       id:d.id,
-      ...d.data()
+      ...d.data(),
+      principal: Number(d.data().principal) || 0,
+      monthlyEMI: Number(d.data().monthlyEMI) || 0
     }));
 
   cachedBaseState = {
-    doctorPercent: config.doctorPercent,
-    cogsPercent: config.cogsPercent,
-    fixedExpenses: config.fixedExpenses,
-    salary: config.salary,
-    openingCash: config.openingCash || 0,
+    doctorPercent: Number(config.doctorPercent) || 0,
+    cogsPercent: Number(config.cogsPercent) || 0,
+    fixedExpenses: Number(config.fixedExpenses) || 0,
+    salary: Number(config.salary) || 0,
+    openingCash: Number(config.openingCash) || 0,
     privateInvestors,
     loans
   };
@@ -219,14 +229,15 @@ async function previewInjectionImpact() {
       }
     });
 
-  currentInjection = {
-    month,
-    amount,
-    strategy: "manual",
-    manualPrivate,
-    manualBank,
-    monthlyPayoutRate: 1
-  };
+ currentInjection = {
+  month,
+  amount,
+  privatePercent,
+  bankPercent,
+  bufferPercent,
+  strategy,
+  monthlyPayoutRate: 1
+};
 
   const privateBefore =
     cachedBaseState.privateInvestors.reduce((s,i)=>
@@ -235,10 +246,12 @@ async function previewInjectionImpact() {
   const injectionPayout =
     amount * 0.01;
 
-  renderInjectionPreview({
-    privateBefore,
-    injectionPayout
-  });
+ renderInjectionPreview({
+  privateBefore,
+  privateAfter: privateBefore, // temporary
+  injectionPayout,
+  netImpact: -injectionPayout  // temporary safe calc
+});
 
   showActiveInjectionBanner(currentInjection);
 }
@@ -282,24 +295,34 @@ function renderInjectionPreview(data) {
   const container =
     document.getElementById("injectionPreview");
 
+  if (!container) return;
+
+  const privateBefore = Number(data.privateBefore) || 0;
+  const privateAfter = Number(data.privateAfter ?? privateBefore) || 0;
+  const injectionPayout = Number(data.injectionPayout) || 0;
+
+  const netImpact =
+    Number(data.netImpact ??
+      (privateBefore - privateAfter - injectionPayout)) || 0;
+
   const netClass =
-    data.netImpact >= 0
+    netImpact >= 0
       ? "highlight-green"
       : "highlight-red";
 
   container.innerHTML = `
     <p><strong>Private Before:</strong>
-      ₹ ${(data.privateBefore/100000).toFixed(2)} L</p>
+      ₹ ${(privateBefore/100000).toFixed(2)} L</p>
 
     <p><strong>Private After:</strong>
-      ₹ ${(data.privateAfter/100000).toFixed(2)} L</p>
+      ₹ ${(privateAfter/100000).toFixed(2)} L</p>
 
     <p><strong>Injection Payout (1%):</strong>
-      ₹ ${(data.injectionPayout/100000).toFixed(2)} L</p>
+      ₹ ${(injectionPayout/100000).toFixed(2)} L</p>
 
     <p><strong>Net Monthly Impact:</strong>
       <span class="${netClass}">
-        ₹ ${(data.netImpact/100000).toFixed(2)} L
+        ₹ ${(netImpact/100000).toFixed(2)} L
       </span>
     </p>
   `;
@@ -567,28 +590,31 @@ function renderSummary(result) {
 }
 
 /* ======================================
-   ADD HYPOTHETICAL INJECTION
+ INJECTION
 ====================================== */
 
 function setCurrentInjection() {
 
-  const amount =
-    Number(document.getElementById("injAmount").value);
+  const amountL =
+    Number(document.getElementById("injAmount")?.value) || 0;
 
   const month =
-    Number(document.getElementById("injMonth").value);
+    Number(document.getElementById("injMonth")?.value) || 0;
 
   const privatePercent =
-    Number(document.getElementById("injPrivate").value);
+    Number(document.getElementById("injPrivate")?.value) || 0;
 
   const bankPercent =
-    Number(document.getElementById("injBank").value);
+    Number(document.getElementById("injBank")?.value) || 0;
 
   const bufferPercent =
-    Number(document.getElementById("injBuffer").value);
+    Number(document.getElementById("injBuffer")?.value) || 0;
 
   const strategy =
-    document.getElementById("injStrategy").value;
+    document.getElementById("injStrategy")?.value || "manual";
+
+  // Convert Lakh → Rupees (CRITICAL FIX)
+  const amount = amountL * 100000;
 
   currentInjection = {
     month,

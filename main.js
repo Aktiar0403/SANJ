@@ -75,6 +75,132 @@ async function loadBaseState() {
 }
 
 /* ==========================================
+   STRUCTURAL SNAPSHOT ANALYSIS
+========================================== */
+
+function computeSnapshot(baseState) {
+
+  const BASE_ANNUAL_REVENUE = 15000000; // 1.5 Cr baseline
+
+  // Seasonal weights (realistic healthcare model)
+  const seasonalWeights = [
+    0.7,0.8,1.0,1.4,1.5,1.4,
+    1.2,1.1,1.1,1.0,0.9,0.8
+  ];
+
+  const totalWeight =
+    seasonalWeights.reduce((a,b)=>a+b,0);
+
+  const worstWeight =
+    Math.min(...seasonalWeights);
+
+  const worstMonthRevenue =
+    (worstWeight / totalWeight) *
+    BASE_ANNUAL_REVENUE;
+
+  // Operating Calculation
+  const doctorCost =
+    worstMonthRevenue *
+    (baseState.doctorPercent / 100);
+
+  const cogs =
+    worstMonthRevenue *
+    (baseState.cogsPercent / 100);
+
+  const worstOperating =
+    worstMonthRevenue -
+    doctorCost -
+    cogs -
+    baseState.fixedExpenses -
+    baseState.salary;
+
+  // Debt Burden
+  const totalPrivateInterest =
+    baseState.privateInvestors
+      .reduce((s,i)=>
+        s + (i.principal *
+             (i.monthlyRate/100)),0);
+
+  const totalBankEMI =
+    baseState.bankLoans
+      .reduce((s,l)=>
+        s + l.monthlyEMI,0);
+
+  const totalDebtBurden =
+    totalPrivateInterest +
+    totalBankEMI;
+
+  const structuralResult =
+    worstOperating -
+    totalDebtBurden;
+
+  return {
+    worstMonthRevenue,
+    worstOperating,
+    totalPrivateInterest,
+    totalBankEMI,
+    totalDebtBurden,
+    structuralResult,
+    status:
+      structuralResult >= 0
+        ? "STABLE"
+        : "DEFICIT"
+  };
+}
+
+function renderSnapshot(snapshot) {
+
+  const el =
+    document.getElementById("snapshot");
+
+  if (!el) return;
+
+  el.innerHTML = `
+    <h3>Structural Snapshot</h3>
+
+    <p><strong>Worst Month Revenue:</strong>
+    ₹ ${(snapshot.worstMonthRevenue/100000)
+      .toFixed(2)} L</p>
+
+    <p><strong>Worst Operating Surplus:</strong>
+    ₹ ${(snapshot.worstOperating/100000)
+      .toFixed(2)} L</p>
+
+    <hr>
+
+    <p><strong>Total Private Interest:</strong>
+    ₹ ${(snapshot.totalPrivateInterest/100000)
+      .toFixed(2)} L</p>
+
+    <p><strong>Total Bank EMI:</strong>
+    ₹ ${(snapshot.totalBankEMI/100000)
+      .toFixed(2)} L</p>
+
+    <p><strong>Total Monthly Debt Burden:</strong>
+    ₹ ${(snapshot.totalDebtBurden/100000)
+      .toFixed(2)} L</p>
+
+    <hr>
+
+    <p><strong>Structural Result:</strong>
+    <span style="color:${
+      snapshot.status === "STABLE"
+      ? "lime"
+      : "red"
+    }">
+    ₹ ${(snapshot.structuralResult/100000)
+      .toFixed(2)} L
+    </span></p>
+
+    <p><strong>Status:</strong>
+    ${snapshot.status === "STABLE"
+      ? "🟢 Structurally Stable"
+      : "🔴 Structural Deficit"}
+    </p>
+  `;
+}
+
+/* ==========================================
    PURE FINANCIAL SIMULATION ENGINE
 ========================================== */
 
@@ -433,25 +559,29 @@ function renderSummary(result) {
    INIT
 ========================================== */
 
-document
-  .addEventListener(
-    "DOMContentLoaded",
-    async () => {
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
 
-      await loadBaseState();
+    await loadBaseState();
 
-      document
-        .getElementById("previewInjectionBtn")
-        ?.addEventListener(
-          "click",
-          previewInjection
-        );
+    const snapshot =
+      computeSnapshot(cachedBaseState);
 
-      document
-        .getElementById("runSimulationBtn")
-        ?.addEventListener(
-          "click",
-          runSimulation
-        );
-    }
+    renderSnapshot(snapshot);
+
+    document
+      .getElementById("previewInjectionBtn")
+      ?.addEventListener(
+        "click",
+        previewInjection
+      );
+
+    document
+      .getElementById("runSimulationBtn")
+      ?.addEventListener(
+        "click",
+        runSimulation
+      );
+  }
 );

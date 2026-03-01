@@ -180,78 +180,63 @@ async function previewInjectionImpact() {
     await loadBaseState();
 
   const amountL =
-    Number(document.getElementById("injAmount").value);
+    Number(document.getElementById("injAmount")?.value) || 0;
 
   const month =
-    Number(document.getElementById("injMonth").value);
+    Number(document.getElementById("injMonth")?.value) || 0;
 
   if (!amountL || !month) {
     alert("Enter Injection Amount and Month");
     return;
   }
 
+  // Convert Lakh → Rupees
   const amount = amountL * 100000;
 
-  const manualPrivate = [];
-  const manualBank = [];
+  // Read percentage inputs safely
+  const privatePercent =
+    Number(document.getElementById("injPrivate")?.value) || 0;
 
-  document.querySelectorAll(".private-reduce")
-    .forEach(input=>{
-      const reduceL =
-        Number(input.value) || 0;
+  const bankPercent =
+    Number(document.getElementById("injBank")?.value) || 0;
 
-      if (reduceL > 0) {
-        manualPrivate.push({
-          id: input.dataset.id,
-          reduceAmount: reduceL * 100000,
-          skipMonths:
-            Number(document.querySelector(
-              `.private-skip[data-id='${input.dataset.id}']`
-            ).value) || 0,
-          newRate:
-            Number(document.querySelector(
-              `.private-rate[data-id='${input.dataset.id}']`
-            ).value) || null
-        });
-      }
-    });
+  const bufferPercent =
+    Number(document.getElementById("injBuffer")?.value) || 0;
 
-  document.querySelectorAll(".bank-reduce")
-    .forEach(input=>{
-      const reduceL =
-        Number(input.value) || 0;
-
-      if (reduceL > 0) {
-        manualBank.push({
-          id: input.dataset.id,
-          reduceAmount: reduceL * 100000
-        });
-      }
-    });
-
- currentInjection = {
-  month,
-  amount,
-  privatePercent,
-  bankPercent,
-  bufferPercent,
-  strategy,
-  monthlyPayoutRate: 1
-};
+  // Compute allocations safely
+  const privateAlloc = amount * (privatePercent / 100);
+  const bankAlloc = amount * (bankPercent / 100);
+  const bufferAlloc = amount * (bufferPercent / 100);
 
   const privateBefore =
-    cachedBaseState.privateInvestors.reduce((s,i)=>
-      s + (i.principal*(i.monthlyRate/100)),0);
+    cachedBaseState.privateInvestors.reduce(
+      (s,i)=> s + (i.principal * (i.monthlyRate/100)), 0
+    );
+
+  const privateAfter = privateBefore - privateAlloc;
 
   const injectionPayout =
-    amount * 0.01;
+    amount * 0.01; // 1% payout assumption
 
- renderInjectionPreview({
-  privateBefore,
-  privateAfter: privateBefore, // temporary
-  injectionPayout,
-  netImpact: -injectionPayout  // temporary safe calc
-});
+  const netImpact =
+    (privateBefore - privateAfter) - injectionPayout;
+
+  currentInjection = {
+    month,
+    amount,
+    privatePercent,
+    bankPercent,
+    bufferPercent,
+    strategy: "percentage",
+    monthlyPayoutRate: 1
+  };
+
+  renderInjectionPreview({
+    privateBefore,
+    privateAfter,
+    injectionPayout,
+    netImpact
+  });
 
   showActiveInjectionBanner(currentInjection);
 }

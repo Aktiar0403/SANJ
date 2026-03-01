@@ -98,38 +98,41 @@
      2️⃣ INJECTION PLANNER
 ========================= -->
 <div class="card">
-  <h2>Injection Planner</h2>
+  <h2>Injection Planner (All Values in Lakhs)</h2>
 
-  <h4>Injection Input</h4>
-  <div class="grid-3">
-    <input id="injAmount" type="number" placeholder="Injection Amount">
-    <input id="injMonth" type="number" placeholder="Injection Month">
+  <div class="grid-2">
+    <div>
+      <label>Injection Amount (L)</label>
+      <input id="injAmount" type="number" placeholder="e.g. 100">
+    </div>
+    <div>
+      <label>Injection Month</label>
+      <input id="injMonth" type="number" placeholder="e.g. 3">
+    </div>
   </div>
 
-  <h4>Allocation (%)</h4>
-  <div class="grid-3">
-    <input id="injPrivate" type="number" placeholder="Private %">
-    <input id="injBank" type="number" placeholder="Bank %">
-    <input id="injBuffer" type="number" placeholder="Buffer %">
-  </div>
-<div class="card">
-  <h2>Manual Investor Allocation</h2>
+  <h3>Private Investors Allocation (Lakhs)</h3>
+  <div id="manualPrivateTable"></div>
 
-  <div id="manualAllocationTable"></div>
+  <h3>Bank Loans Allocation (Lakhs)</h3>
+  <div id="manualBankTable"></div>
 
-  <div style="margin-top:10px;">
+  <div style="margin-top:15px;">
     <strong>Remaining Injection:</strong>
     <span id="remainingInjection">₹ 0 L</span>
   </div>
+
+  <div style="margin-top:15px;">
+    <button id="previewInjectionBtn" class="primary-btn">
+      Preview Injection
+    </button>
+    <button id="clearInjectionBtn" class="danger-btn">
+      Clear Injection
+    </button>
+  </div>
 </div>
-  <h4>Strategy</h4>
-  <select id="injStrategy">
-    <option value="pressure_first">Pressure First</option>
-    <option value="negotiable_first">Negotiable First</option>
-    <option value="highest_interest_first">Highest Interest First</option>
-    <option value="priority_level_first">Priority Level First</option>
-    <option value="equal_distribution">Equal Distribution</option>
-  </select>
+
+<div id="injectionPreview" class="card"></div>
 <div id="activeInjectionBanner"></div>
   <div style="margin-top:10px;">
     <button id="previewInjectionBtn" class="primary-btn">

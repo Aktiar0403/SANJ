@@ -169,45 +169,52 @@ async function previewInjectionImpact() {
   if (!cachedBaseState)
     await loadBaseState();
 
-  const amount =
+  const amountL =
     Number(document.getElementById("injAmount").value);
 
   const month =
     Number(document.getElementById("injMonth").value);
 
-  if (!amount || !month) {
+  if (!amountL || !month) {
     alert("Enter Injection Amount and Month");
     return;
   }
 
-  const manualAllocations = [];
+  const amount = amountL * 100000;
 
-  document.querySelectorAll(".reduce-input")
+  const manualPrivate = [];
+  const manualBank = [];
+
+  document.querySelectorAll(".private-reduce")
     .forEach(input=>{
+      const reduceL =
+        Number(input.value) || 0;
 
-      const id = input.dataset.id;
-
-      const reduceAmount =
-        (Number(input.value) || 0) * 100000;
-
-      const skipMonths =
-        Number(document.querySelector(
-          `.skip-input[data-id='${id}']`
-        ).value) || 0;
-
-      const newRate =
-        Number(document.querySelector(
-          `.rate-input[data-id='${id}']`
-        ).value);
-
-      if (reduceAmount > 0) {
-
-        manualAllocations.push({
-          id,
-          reduceAmount,
-          skipMonths,
+      if (reduceL > 0) {
+        manualPrivate.push({
+          id: input.dataset.id,
+          reduceAmount: reduceL * 100000,
+          skipMonths:
+            Number(document.querySelector(
+              `.private-skip[data-id='${input.dataset.id}']`
+            ).value) || 0,
           newRate:
-            isNaN(newRate) ? null : newRate
+            Number(document.querySelector(
+              `.private-rate[data-id='${input.dataset.id}']`
+            ).value) || null
+        });
+      }
+    });
+
+  document.querySelectorAll(".bank-reduce")
+    .forEach(input=>{
+      const reduceL =
+        Number(input.value) || 0;
+
+      if (reduceL > 0) {
+        manualBank.push({
+          id: input.dataset.id,
+          reduceAmount: reduceL * 100000
         });
       }
     });
@@ -216,60 +223,25 @@ async function previewInjectionImpact() {
     month,
     amount,
     strategy: "manual",
-    manualAllocations,
+    manualPrivate,
+    manualBank,
     monthlyPayoutRate: 1
   };
-
-  /* CALCULATE BEFORE */
 
   const privateBefore =
     cachedBaseState.privateInvestors.reduce((s,i)=>
       s + (i.principal*(i.monthlyRate/100)),0);
 
-  /* CLONE STATE */
-
-  const cloned =
-    JSON.parse(JSON.stringify(
-      cachedBaseState.privateInvestors
-    ));
-
-  /* APPLY MANUAL */
-
-  manualAllocations.forEach(m=>{
-
-    const investor =
-      cloned.find(i=>i.id===m.id);
-
-    if (!investor) return;
-
-    investor.principal -= m.reduceAmount;
-
-    if (m.newRate !== null)
-      investor.monthlyRate = m.newRate;
-  });
-
-  const privateAfter =
-    cloned.reduce((s,i)=>
-      s + (i.principal*(i.monthlyRate/100)),0);
-
   const injectionPayout =
     amount * 0.01;
 
-  const netImpact =
-    (privateBefore - privateAfter)
-    - injectionPayout;
-
   renderInjectionPreview({
     privateBefore,
-    privateAfter,
-    injectionPayout,
-    netImpact,
-    breakdown: manualAllocations
+    injectionPayout
   });
 
   showActiveInjectionBanner(currentInjection);
 }
-
 
 
 function sortInvestorsForPreview(list, strategy) {
@@ -348,7 +320,7 @@ function showActiveInjectionBanner(injection) {
   `;
 }
 
-async function renderManualAllocationTable() {
+async function renderManualPrivateTable() {
 
   if (!cachedBaseState)
     await loadBaseState();
@@ -357,7 +329,7 @@ async function renderManualAllocationTable() {
     cachedBaseState.privateInvestors;
 
   const container =
-    document.getElementById("manualAllocationTable");
+    document.getElementById("manualPrivateTable");
 
   container.innerHTML = `
     <table>
@@ -366,7 +338,7 @@ async function renderManualAllocationTable() {
         <th>Principal (L)</th>
         <th>Rate %</th>
         <th>Reduce (L)</th>
-        <th>Skip Months</th>
+        <th>Skip (Months)</th>
         <th>New Rate %</th>
       </tr>
       ${investors.map(inv=>`
@@ -376,21 +348,59 @@ async function renderManualAllocationTable() {
           <td>${inv.monthlyRate}</td>
           <td>
             <input type="number"
-              class="reduce-input"
+              class="private-reduce"
               data-id="${inv.id}"
               value="0">
           </td>
           <td>
             <input type="number"
-              class="skip-input"
+              class="private-skip"
               data-id="${inv.id}"
               value="0">
           </td>
           <td>
             <input type="number"
-              class="rate-input"
+              class="private-rate"
               data-id="${inv.id}"
               placeholder="${inv.monthlyRate}">
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+
+  attachRemainingListener();
+}
+
+async function renderManualBankTable() {
+
+  if (!cachedBaseState)
+    await loadBaseState();
+
+  const loans =
+    cachedBaseState.loans;
+
+  const container =
+    document.getElementById("manualBankTable");
+
+  container.innerHTML = `
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Principal (L)</th>
+        <th>EMI (L)</th>
+        <th>Reduce (L)</th>
+      </tr>
+      ${loans.map(loan=>`
+        <tr>
+          <td>${loan.name}</td>
+          <td>${(loan.principal/100000).toFixed(2)}</td>
+          <td>${((loan.monthlyEMI||0)/100000).toFixed(2)}</td>
+          <td>
+            <input type="number"
+              class="bank-reduce"
+              data-id="${loan.id}"
+              value="0">
           </td>
         </tr>
       `).join("")}
@@ -403,29 +413,36 @@ async function renderManualAllocationTable() {
 
 function updateRemainingInjection() {
 
-  const totalInjection =
+  const totalInjectionL =
     Number(document.getElementById("injAmount").value) || 0;
 
-  let totalAllocated = 0;
+  let totalAllocatedL = 0;
 
-  document.querySelectorAll(".reduce-input")
+  document.querySelectorAll(".private-reduce")
     .forEach(input=>{
-      totalAllocated +=
-        (Number(input.value) || 0) * 100000;
+      totalAllocatedL +=
+        Number(input.value) || 0;
     });
 
-  const remaining =
-    totalInjection - totalAllocated;
+  document.querySelectorAll(".bank-reduce")
+    .forEach(input=>{
+      totalAllocatedL +=
+        Number(input.value) || 0;
+    });
+
+  const remainingL =
+    totalInjectionL - totalAllocatedL;
 
   document.getElementById("remainingInjection")
     .innerText =
-      `₹ ${(remaining/100000).toFixed(2)} L`;
+      `₹ ${remainingL.toFixed(2)} L`;
 }
 
 
 function attachRemainingListener() {
 
-  document.querySelectorAll(".reduce-input")
+  document
+    .querySelectorAll(".private-reduce, .bank-reduce")
     .forEach(input=>{
       input.addEventListener("input",
         updateRemainingInjection

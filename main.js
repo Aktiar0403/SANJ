@@ -189,52 +189,111 @@ function setDecision(id,key,value) {
 }
 
 
-function calculateOutcome(godfatherAmount) {
+function calculateOutcome() {
+
+  const godfatherAmount =
+    Number(document.getElementById("godfatherAmount")?.value) || 0;
 
   let injectionUsed = 0;
   let newPrivateInterest = 0;
 
   baseInvestors.forEach(inv => {
 
-    const action = decisions[inv.id] || {};
+    const allocationInput =
+      document.querySelector(
+        `.allocate-input[data-id='${inv.id}']`
+      );
 
-    if (action.close) {
-      injectionUsed += inv.principal;
+    const rateInput =
+      document.querySelector(
+        `.new-rate[data-id='${inv.id}']`
+      );
+
+    const skipInput =
+      document.querySelector(
+        `.skip-months[data-id='${inv.id}']`
+      );
+
+    const allocation =
+      Number(allocationInput?.value) || 0;
+
+    const negotiatedRate =
+      Number(rateInput?.value);
+
+    const skipMonths =
+      Number(skipInput?.value) || 0;
+
+    // If allocation exceeds principal, clamp
+    const effectiveAllocation =
+      Math.min(allocation, inv.principal);
+
+    injectionUsed += effectiveAllocation;
+
+    const remainingPrincipal =
+      inv.principal - effectiveAllocation;
+
+    // Determine rate
+    let originalRate = 0;
+
+    if (inv.monthlyInterest > 0) {
+      originalRate =
+        (inv.monthlyInterest / inv.principal) * 100;
+    }
+
+    let finalRate = originalRate;
+
+    if (effectiveAllocation > 0 && negotiatedRate) {
+      finalRate = negotiatedRate;
+    }
+
+    // Skip logic
+    if (skipMonths > 0) {
+      // temporarily zero interest
       return;
     }
 
-    const reduceAmount = Number(action.reduce) || 0;
-    const remainingPrincipal = inv.principal - reduceAmount;
-
-    injectionUsed += reduceAmount;
-
-    let rate;
-
-    if (action.newRate) {
-      rate = Number(action.newRate);
-    } else if (inv.monthlyInterest > 0) {
-      rate = (inv.monthlyInterest / inv.principal) * 100;
-    } else {
-      rate = 0;
-    }
-
-    if (action.skip > 0) {
-      return; // temporarily no interest
-    }
-
     newPrivateInterest +=
-      remainingPrincipal * (rate/100);
+      remainingPrincipal * (finalRate / 100);
+
   });
 
-  const godfatherCost = godfatherAmount * 0.01;
+  const godfatherCost =
+    godfatherAmount * 0.01;
 
-  return {
-    injectionUsed,
-    newPrivateInterest,
-    godfatherCost
-  };
+  const remainingBuffer =
+    godfatherAmount - injectionUsed;
+
+  const totalPrivateBurden =
+    newPrivateInterest + godfatherCost;
+
+  // Display result
+  const results =
+    document.getElementById("results");
+
+  results.innerHTML = `
+    <h3>Post-Restructure Summary</h3>
+
+    <p><strong>Godfather Total:</strong>
+    ₹ ${(godfatherAmount/100000).toFixed(2)} L</p>
+
+    <p><strong>Injection Used:</strong>
+    ₹ ${(injectionUsed/100000).toFixed(2)} L</p>
+
+    <p><strong>Remaining Buffer:</strong>
+    ₹ ${(remainingBuffer/100000).toFixed(2)} L</p>
+
+    <hr>
+
+    <p><strong>New Private Interest:</strong>
+    ₹ ${(newPrivateInterest/100000).toFixed(2)} L</p>
+
+    <p><strong>Godfather Monthly Cost (1%):</strong>
+    ₹ ${(godfatherCost/100000).toFixed(2)} L</p>
+
+    <p><strong>Total Private Burden:</strong>
+    ₹ ${(totalPrivateBurden/100000).toFixed(2)} L</p>
+  `;
 }
-
 function addPrivate() {
   privateInvestors.push({
     name: "Investor " + (privateInvestors.length + 1),

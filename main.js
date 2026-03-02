@@ -39,20 +39,22 @@ function renderPrivateUI() {
     container.innerHTML += `
       <div class="investor-card">
 
-       <div class="investor-header"
-  data-id="${inv.id}">
+        <div class="investor-header"
+          data-id="${inv.id}">
 
           <h3>${inv.name}</h3>
 
           <div>
             ₹ ${(inv.principal/100000).toFixed(1)}L
-            <span class="toggle-icon" id="icon-${inv.id}">+</span>
+            <span class="toggle-icon"
+              id="icon-${inv.id}">+</span>
           </div>
 
         </div>
 
         <div class="investor-body"
-          id="body-${inv.id}">
+          id="body-${inv.id}"
+          style="display:none;">
 
           <p><strong>Principal:</strong>
           ₹ ${(inv.principal/100000).toFixed(2)} L</p>
@@ -63,55 +65,37 @@ function renderPrivateUI() {
           <p><strong>Effective Rate:</strong>
           ${rate}%</p>
 
-          <hr>
-
-          <label>Close Fully</label>
-          <input type="checkbox"
-            onchange="setDecision('${inv.id}','close',this.checked)">
-
-          <label>Reduce Principal (₹)</label>
-          <input type="number"
-            onchange="setDecision('${inv.id}','reduce',this.value)">
-
-          <label>New Rate %</label>
-          <input type="number"
-            onchange="setDecision('${inv.id}','newRate',this.value)">
-
-          <label>Skip Months</label>
-          <input type="number"
-            onchange="setDecision('${inv.id}','skip',this.value)">
-
         </div>
       </div>
     `;
   });
 
-document
-  .querySelectorAll(".investor-header")
-  .forEach(header => {
+  // Attach listeners safely
+  document
+    .querySelectorAll(".investor-header")
+    .forEach(header => {
 
-    header.addEventListener("click", () => {
+      header.addEventListener("click", () => {
 
-      const id = header.dataset.id;
+        const id = header.dataset.id;
 
-      const body =
-        document.getElementById("body-" + id);
+        const body =
+          document.getElementById("body-" + id);
 
-      const icon =
-        document.getElementById("icon-" + id);
+        const icon =
+          document.getElementById("icon-" + id);
 
-      if (body.style.display === "block") {
-        body.style.display = "none";
-        icon.innerText = "+";
-      } else {
-        body.style.display = "block";
-        icon.innerText = "−";
-      }
+        if (body.style.display === "block") {
+          body.style.display = "none";
+          icon.innerText = "+";
+        } else {
+          body.style.display = "block";
+          icon.innerText = "−";
+        }
+
+      });
 
     });
-
-  });
-
 }
 
 function toggleInvestor(id) {

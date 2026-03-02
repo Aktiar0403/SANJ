@@ -1,5 +1,118 @@
+import {
+  db,
+  collection,
+  getDocs
+} from "./firebase.js";
+
+let baseInvestors = [];
+let decisions = {};
 let privateInvestors = [];
 let bankLoans = [];
+
+async function loadPrivateInvestors() {
+  const snap = await getDocs(collection(db,"privateInvestors"));
+
+  baseInvestors = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  renderPrivateUI();
+}
+
+function renderPrivateUI() {
+
+  const container = document.getElementById("privateContainer");
+  container.innerHTML = "";
+
+  baseInvestors.forEach(inv => {
+
+    const rate =
+      inv.monthlyInterest > 0
+      ? ((inv.monthlyInterest / inv.principal) * 100).toFixed(2)
+      : 0;
+
+    container.innerHTML += `
+      <div class="investor-card">
+
+        <h3>${inv.name}</h3>
+
+        <p>Principal: ₹ ${(inv.principal/100000).toFixed(2)} L</p>
+        <p>Current Interest: ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
+        <p>Effective Rate: ${rate}%</p>
+
+        <label>Close Fully</label>
+        <input type="checkbox"
+          onchange="setDecision('${inv.id}','close',this.checked)">
+
+        <label>Reduce Principal (₹)</label>
+        <input type="number"
+          onchange="setDecision('${inv.id}','reduce',this.value)">
+
+        <label>New Rate % (optional)</label>
+        <input type="number"
+          onchange="setDecision('${inv.id}','newRate',this.value)">
+
+        <label>Skip Months</label>
+        <input type="number"
+          onchange="setDecision('${inv.id}','skip',this.value)">
+
+      </div>
+    `;
+  });
+}
+
+function setDecision(id,key,value) {
+  if (!decisions[id]) decisions[id] = {};
+  decisions[id][key] = value;
+}
+
+
+function calculateOutcome(godfatherAmount) {
+
+  let injectionUsed = 0;
+  let newPrivateInterest = 0;
+
+  baseInvestors.forEach(inv => {
+
+    const action = decisions[inv.id] || {};
+
+    if (action.close) {
+      injectionUsed += inv.principal;
+      return;
+    }
+
+    const reduceAmount = Number(action.reduce) || 0;
+    const remainingPrincipal = inv.principal - reduceAmount;
+
+    injectionUsed += reduceAmount;
+
+    let rate;
+
+    if (action.newRate) {
+      rate = Number(action.newRate);
+    } else if (inv.monthlyInterest > 0) {
+      rate = (inv.monthlyInterest / inv.principal) * 100;
+    } else {
+      rate = 0;
+    }
+
+    if (action.skip > 0) {
+      return; // temporarily no interest
+    }
+
+    newPrivateInterest +=
+      remainingPrincipal * (rate/100);
+  });
+
+  const godfatherCost = godfatherAmount * 0.01;
+
+  return {
+    injectionUsed,
+    newPrivateInterest,
+    godfatherCost
+  };
+}
 
 function addPrivate() {
   privateInvestors.push({
@@ -145,3 +258,7 @@ function calculate() {
     <p><strong>Runway:</strong> ${runway}</p>
   `;
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadPrivateInvestors();
+});

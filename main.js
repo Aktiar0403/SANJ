@@ -442,3 +442,16 @@ function calculate() {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadPrivateInvestors();
 });
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  await loadPrivateInvestors();
+
+  const btn = document.getElementById("calculateBtn");
+
+  if (btn) {
+    btn.addEventListener("click", calculateOutcome);
+  }
+
+});

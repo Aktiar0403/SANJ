@@ -47,3 +47,44 @@ button {
   margin-bottom: 10px;
 }
 
+.investor-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.investor-header {
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e293b;
+}
+
+.investor-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.investor-body {
+  display: none;
+  padding: 12px;
+  border-top: 1px solid #334155;
+}
+
+.investor-body label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.investor-body input {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.toggle-icon {
+  font-size: 18px;
+}

@@ -22,7 +22,11 @@ async function loadPrivateInvestors() {
 
 function renderPrivateUI() {
 
-  const container = document.getElementById("privateContainer");
+  const container =
+    document.getElementById("privateContainer");
+
+  if (!container) return;
+
   container.innerHTML = "";
 
   baseInvestors.forEach(inv => {
@@ -35,32 +39,72 @@ function renderPrivateUI() {
     container.innerHTML += `
       <div class="investor-card">
 
-        <h3>${inv.name}</h3>
+        <div class="investor-header"
+          onclick="toggleInvestor('${inv.id}')">
 
-        <p>Principal: ₹ ${(inv.principal/100000).toFixed(2)} L</p>
-        <p>Current Interest: ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
-        <p>Effective Rate: ${rate}%</p>
+          <h3>${inv.name}</h3>
 
-        <label>Close Fully</label>
-        <input type="checkbox"
-          onchange="setDecision('${inv.id}','close',this.checked)">
+          <div>
+            ₹ ${(inv.principal/100000).toFixed(1)}L
+            <span class="toggle-icon" id="icon-${inv.id}">+</span>
+          </div>
 
-        <label>Reduce Principal (₹)</label>
-        <input type="number"
-          onchange="setDecision('${inv.id}','reduce',this.value)">
+        </div>
 
-        <label>New Rate % (optional)</label>
-        <input type="number"
-          onchange="setDecision('${inv.id}','newRate',this.value)">
+        <div class="investor-body"
+          id="body-${inv.id}">
 
-        <label>Skip Months</label>
-        <input type="number"
-          onchange="setDecision('${inv.id}','skip',this.value)">
+          <p><strong>Principal:</strong>
+          ₹ ${(inv.principal/100000).toFixed(2)} L</p>
 
+          <p><strong>Monthly Interest:</strong>
+          ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
+
+          <p><strong>Effective Rate:</strong>
+          ${rate}%</p>
+
+          <hr>
+
+          <label>Close Fully</label>
+          <input type="checkbox"
+            onchange="setDecision('${inv.id}','close',this.checked)">
+
+          <label>Reduce Principal (₹)</label>
+          <input type="number"
+            onchange="setDecision('${inv.id}','reduce',this.value)">
+
+          <label>New Rate %</label>
+          <input type="number"
+            onchange="setDecision('${inv.id}','newRate',this.value)">
+
+          <label>Skip Months</label>
+          <input type="number"
+            onchange="setDecision('${inv.id}','skip',this.value)">
+
+        </div>
       </div>
     `;
   });
 }
+
+function toggleInvestor(id) {
+
+  const body =
+    document.getElementById("body-" + id);
+
+  const icon =
+    document.getElementById("icon-" + id);
+
+  if (body.style.display === "block") {
+    body.style.display = "none";
+    icon.innerText = "+";
+  } else {
+    body.style.display = "block";
+    icon.innerText = "−";
+  }
+}
+
+
 
 function setDecision(id,key,value) {
   if (!decisions[id]) decisions[id] = {};

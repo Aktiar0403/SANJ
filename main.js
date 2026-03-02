@@ -25,9 +25,23 @@ function renderPrivateUI() {
   const container =
     document.getElementById("privateContainer");
 
+  const summary =
+    document.getElementById("privateSummary");
+
   if (!container) return;
 
   container.innerHTML = "";
+
+  let totalInterest = 0;
+
+  baseInvestors.forEach(inv => {
+    totalInterest += Number(inv.monthlyInterest) || 0;
+  });
+
+  summary.innerHTML = `
+    <strong>Total Monthly Private Interest:</strong>
+    ₹ ${(totalInterest/100000).toFixed(2)} L
+  `;
 
   baseInvestors.forEach(inv => {
 
@@ -65,12 +79,26 @@ function renderPrivateUI() {
           <p><strong>Effective Rate:</strong>
           ${rate}%</p>
 
+          <hr>
+
+          <label>Close Fully</label>
+          <input type="checkbox">
+
+          <label>Reduce Principal (₹)</label>
+          <input type="number">
+
+          <label>New Rate %</label>
+          <input type="number">
+
+          <label>Skip Months</label>
+          <input type="number">
+
         </div>
       </div>
     `;
   });
 
-  // Attach listeners safely
+  // Auto-close logic
   document
     .querySelectorAll(".investor-header")
     .forEach(header => {
@@ -79,19 +107,28 @@ function renderPrivateUI() {
 
         const id = header.dataset.id;
 
+        // Close all first
+        document
+          .querySelectorAll(".investor-body")
+          .forEach(body => {
+            body.style.display = "none";
+          });
+
+        document
+          .querySelectorAll(".toggle-icon")
+          .forEach(icon => {
+            icon.innerText = "+";
+          });
+
+        // Open selected
         const body =
           document.getElementById("body-" + id);
 
         const icon =
           document.getElementById("icon-" + id);
 
-        if (body.style.display === "block") {
-          body.style.display = "none";
-          icon.innerText = "+";
-        } else {
-          body.style.display = "block";
-          icon.innerText = "−";
-        }
+        body.style.display = "block";
+        icon.innerText = "−";
 
       });
 

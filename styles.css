@@ -88,3 +88,10 @@ button {
 .toggle-icon {
   font-size: 18px;
 }
+#privateSummary {
+  background: #0f172a;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #334155;
+}

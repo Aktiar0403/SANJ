@@ -70,31 +70,38 @@ function renderPrivateUI() {
           id="body-${inv.id}"
           style="display:none;">
 
-          <p><strong>Principal:</strong>
-          ₹ ${(inv.principal/100000).toFixed(2)} L</p>
+         <p><strong>Principal:</strong>
+₹ ${(inv.principal/100000).toFixed(2)} L</p>
 
-          <p><strong>Monthly Interest:</strong>
-          ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
+<p><strong>Monthly Interest:</strong>
+₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
 
-          <p><strong>Effective Rate:</strong>
-          ${rate}%</p>
+<p><strong>Effective Rate:</strong>
+${rate}%</p>
 
-          <hr>
+<hr>
 
-          <label>Close Fully</label>
-          <input type="checkbox">
+<label>Allocate from Godfather (₹)</label>
+<input type="number"
+  class="allocate-input"
+  data-id="${inv.id}"
+  placeholder="0">
 
-          <label>Reduce Principal (₹)</label>
-          <input type="number">
+<div class="negotiation-section"
+  id="negotiation-${inv.id}"
+  style="display:none;">
 
-          <label>New Rate %</label>
-          <input type="number">
+  <label>New Negotiated Rate %</label>
+  <input type="number"
+    class="new-rate"
+    data-id="${inv.id}">
 
-          <label>Skip Months</label>
-          <input type="number">
+  <label>Skip Months</label>
+  <input type="number"
+    class="skip-months"
+    data-id="${inv.id}">
 
-        </div>
-      </div>
+</div>
     `;
   });
 
@@ -133,6 +140,28 @@ function renderPrivateUI() {
       });
 
     });
+
+    document
+  .querySelectorAll(".allocate-input")
+  .forEach(input => {
+
+    input.addEventListener("input", () => {
+
+      const id = input.dataset.id;
+      const value = Number(input.value) || 0;
+
+      const negotiation =
+        document.getElementById("negotiation-" + id);
+
+      if (value > 0) {
+        negotiation.style.display = "block";
+      } else {
+        negotiation.style.display = "none";
+      }
+
+    });
+
+  });
 }
 
 function toggleInvestor(id) {

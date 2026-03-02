@@ -1,212 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>Capital Allocation Simulator</title>
-
-  <!-- Prevent favicon 404 -->
-  <link rel="icon" href="data:," />
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      margin-bottom: 10px;
-    }
-
-    .card {
-      background: #1e293b;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-    }
-
-    input, select, button {
-      padding: 6px;
-      border-radius: 4px;
-      border: none;
-      width: 100%;
-    }
-
-    button {
-      background: #3b82f6;
-      color: white;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    button:hover {
-      background: #2563eb;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    th, td {
-      border-bottom: 1px solid #334155;
-      padding: 6px;
-      text-align: left;
-    }
-
-    th {
-      background: #1e293b;
-    }
-
-    canvas {
-      background: #1e293b;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    .summary p {
-      margin: 4px 0;
-    }
-  </style>
+  <title>Business Survival Engine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
 
-<h1>Capital Allocation Simulator</h1>
+<h1>Business Survival Dashboard</h1>
 
-<!-- =========================
-     1️⃣ BUSINESS SNAPSHOT
-========================= -->
-<div class="card">
-  <h2>Current Structural Snapshot (All in Lakhs)</h2>
-  <div id="snapshot"></div>
-</div>
+<section class="card">
+  <h2>Business Inputs</h2>
 
-<!-- =========================
-     2️⃣ INJECTION PLANNER
-========================= -->
-<div class="card">
-  <h2>Injection Planner (All Values in Lakhs)</h2>
+  <label>Monthly Revenue (₹)</label>
+  <input id="revenue" type="number" value="1250000" />
 
-  <div class="grid-2">
-    <div>
-      <label>Injection Amount (L)</label>
-      <input id="injAmount" type="number" placeholder="e.g. 100">
-    </div>
-    <div>
-      <label>Injection Month</label>
-      <input id="injMonth" type="number" placeholder="e.g. 3">
-    </div>
-  </div>
+  <label>Doctor %</label>
+  <input id="doctorPercent" type="number" value="32.5" />
 
-  <h3>Private Investors Allocation (Lakhs)</h3>
-  <div id="manualPrivateTable"></div>
+  <label>COGS %</label>
+  <input id="cogsPercent" type="number" value="16.7" />
 
-  <h3>Bank Loans Allocation (Lakhs)</h3>
-  <div id="manualBankTable"></div>
+  <label>Fixed Salaries & Operating (₹)</label>
+  <input id="fixedExpense" type="number" value="290000" />
+</section>
 
-  <div style="margin-top:15px;">
-    <strong>Remaining Injection:</strong>
-    <span id="remainingInjection">₹ 0 L</span>
-  </div>
+<section class="card">
+  <h2>Private Investors</h2>
+  <div id="privateList"></div>
+  <button onclick="addPrivate()">Add Private Investor</button>
+</section>
 
-  <div style="margin-top:15px;">
-    <button id="previewInjectionBtn" class="primary-btn">
-      Preview Injection
-    </button>
-    <button id="clearInjectionBtn" class="danger-btn">
-      Clear Injection
-    </button>
-  </div>
-</div>
+<section class="card">
+  <h2>Bank Loans</h2>
+  <div id="bankList"></div>
+  <button onclick="addBank()">Add Bank Loan</button>
+</section>
 
-<div id="injectionPreview" class="card"></div>
-<div id="activeInjectionBanner"></div>
-  <div style="margin-top:10px;">
-    <button id="previewInjectionBtn" class="primary-btn">
-  Preview Injection
-</button>
+<section class="card">
+  <h2>Godfather Investment</h2>
+  <label>Godfather Investment Amount (₹)</label>
+  <input id="godfatherAmount" type="number" value="0" />
+</section>
 
-  </div>
-</div>
+<section class="card">
+  <h2>Results</h2>
+  <div id="results"></div>
+</section>
 
-<!-- =========================
-     3️⃣ INJECTION IMPACT
-========================= -->
-<div class="card">
-  <h2>Injection Impact Preview</h2>
-  <div id="injectionPreview"></div>
-</div>
+<button class="primary" onclick="calculate()">Calculate Survival Outcome</button>
 
-<!-- =========================
-     4️⃣ SIMULATION CONTROLS
-========================= -->
-<div class="card">
-  <h2>Simulation Controls</h2>
-
-  <div class="grid-3">
-    <input id="growthInput" type="number" placeholder="Growth % (optional)">
-    <label>
-      <input type="checkbox" id="runUntilCollapse">
-      Run Until Collapse
-    </label>
-  </div>
-
-  <button id="runSimulationBtn">Run 5-Year Simulation</button>
-</div>
-
-<!-- =========================
-     5️⃣ RESULTS SUMMARY
-========================= -->
-<div class="card">
-  <h2>Simulation Summary</h2>
-  <div id="summary"></div>
-</div>
-
-<!-- =========================
-     6️⃣ CASH GRAPH
-========================= -->
-<div class="card">
-  <h2>Cash Curve</h2>
-  <canvas id="cashChart" height="100"></canvas>
-</div>
-
-<!-- =========================
-     7️⃣ MONTHLY BREAKDOWN
-========================= -->
-<div class="card">
-  <h2>Monthly Breakdown</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Month</th>
-        <th>Billing</th>
-        <th>Business Expense</th>
-        <th>Bank EMI</th>
-        <th>Private Interest</th>
-        <th>Injection Payout</th>
-        <th>Cash</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="simulationTable"></tbody>
-  </table>
-</div>
-
-<script type="module" src="firebase.js"></script>
-<script type="module" src="main.js"></script>
-
+<script src="main.js"></script>
 </body>
 </html>

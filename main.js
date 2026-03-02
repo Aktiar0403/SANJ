@@ -39,8 +39,8 @@ function renderPrivateUI() {
     container.innerHTML += `
       <div class="investor-card">
 
-        <div class="investor-header"
-          onclick="toggleInvestor('${inv.id}')">
+       <div class="investor-header"
+  data-id="${inv.id}">
 
           <h3>${inv.name}</h3>
 
@@ -85,6 +85,33 @@ function renderPrivateUI() {
       </div>
     `;
   });
+
+document
+  .querySelectorAll(".investor-header")
+  .forEach(header => {
+
+    header.addEventListener("click", () => {
+
+      const id = header.dataset.id;
+
+      const body =
+        document.getElementById("body-" + id);
+
+      const icon =
+        document.getElementById("icon-" + id);
+
+      if (body.style.display === "block") {
+        body.style.display = "none";
+        icon.innerText = "+";
+      } else {
+        body.style.display = "block";
+        icon.innerText = "−";
+      }
+
+    });
+
+  });
+
 }
 
 function toggleInvestor(id) {

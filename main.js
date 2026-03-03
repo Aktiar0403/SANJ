@@ -10,6 +10,8 @@ import {
 
 let baseInvestors = [];
 
+let confirmedInjection = 0;
+
 let personalLoans = [
   { id: "hdfc", name: "HDFC Block", emi: 46000, principal: 600000 },
   { id: "bajajHero", name: "Bajaj + Hero", emi: 30000, principal: 600000 },
@@ -301,12 +303,43 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 });
 
+function confirmInjection() {
 
+  const input =
+    Number(document.getElementById("godfatherInput")?.value) || 0;
+
+  if (input <= 0) {
+    alert("Enter valid injection amount");
+    return;
+  }
+
+  confirmedInjection = input;
+
+  // Update sticky immediately
+  document.getElementById("gfTotal").innerText =
+    "₹ " + (confirmedInjection/100000).toFixed(2) + " L";
+
+  document.getElementById("gfUsed").innerText =
+    "₹ 0.00 L";
+
+  document.getElementById("gfRemaining").innerText =
+    "₹ " + (confirmedInjection/100000).toFixed(2) + " L";
+
+  alert("Injection Confirmed");
+
+}
 /* ==============================
    FULL SURVIVAL CALCULATION
 ============================== */
 
 function calculateOutcome() {
+
+if (confirmedInjection <= 0) {
+  alert("Please confirm Godfather injection first.");
+  return;
+}
+
+
 
   /* ========= 1️⃣ OPERATING ========= */
 
@@ -331,8 +364,7 @@ function calculateOutcome() {
 
   /* ========= 2️⃣ GODFATHER ========= */
 
-  const godfatherAmount =
-    Number(document.getElementById("godfatherAmount")?.value) || 0;
+  const godfatherAmount = confirmedInjection;
 
   const godfatherCost =
     godfatherAmount * 0.01;
@@ -708,6 +740,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+const injectBtn = document.getElementById("injectBtn");
+
+if (injectBtn) {
+  injectBtn.addEventListener("click", confirmInjection);
+}
+
 
   await loadPrivateInvestors();
 

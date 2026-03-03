@@ -7,7 +7,104 @@ import {
 let baseInvestors = [];
 let decisions = {};
 let privateInvestors = [];
-let bankLoans = [];
+
+let bankLoans = [
+  {
+    id: "hdfc",
+    name: "HDFC Block",
+    emi: 46000,
+    principal: 600000
+  },
+  {
+    id: "bajajHero",
+    name: "Bajaj + Hero",
+    emi: 30000,
+    principal: 600000
+  },
+  {
+    id: "financeCorp",
+    name: "FinanceCorp",
+    emi: 19000,
+    principal: 600000
+  }
+];
+
+function renderBankUI() {
+
+  const container =
+    document.getElementById("bankContainer");
+
+  container.innerHTML = "";
+
+  bankLoans.forEach(loan => {
+
+    container.innerHTML += `
+      <div class="investor-card">
+
+        <div class="investor-header"
+          data-id="${loan.id}">
+
+          <h3>${loan.name}</h3>
+
+          <div>
+            EMI ₹ ${(loan.emi/100000).toFixed(2)}L
+          </div>
+
+        </div>
+
+        <div class="investor-body"
+          id="bank-${loan.id}"
+          style="display:none;">
+
+          <p><strong>Outstanding:</strong>
+          ₹ ${(loan.principal/100000).toFixed(2)} L</p>
+
+          <p><strong>Monthly EMI:</strong>
+          ₹ ${(loan.emi/100000).toFixed(2)} L</p>
+
+          <hr>
+
+          <label>Close Fully</label>
+          <input type="checkbox"
+            class="bank-close"
+            data-id="${loan.id}">
+
+          <label>Reduce Principal (₹)</label>
+          <input type="number"
+            class="bank-reduce"
+            data-id="${loan.id}">
+
+        </div>
+      </div>
+    `;
+  });
+
+  attachBankToggle();
+}
+
+function attachBankToggle() {
+
+  document
+    .querySelectorAll("#bankContainer .investor-header")
+    .forEach(header => {
+
+      header.addEventListener("click", () => {
+
+        const id = header.dataset.id;
+
+        document
+          .querySelectorAll("#bankContainer .investor-body")
+          .forEach(body => body.style.display = "none");
+
+        const target =
+          document.getElementById("bank-" + id);
+
+        target.style.display = "block";
+      });
+
+    });
+}
+
 
 async function loadPrivateInvestors() {
   const snap = await getDocs(collection(db,"privateInvestors"));
@@ -191,10 +288,49 @@ function setDecision(id,key,value) {
 
 function calculateOutcome() {
 
+  /* ===============================
+     1️⃣ BUSINESS OPERATING PART
+  =============================== */
+
+  const revenue =
+    Number(document.getElementById("revenue")?.value) || 0;
+
+  const doctorPercent =
+    Number(document.getElementById("doctorPercent")?.value) || 0;
+
+  const cogsPercent =
+    Number(document.getElementById("cogsPercent")?.value) || 0;
+
+  const fixedExpense =
+    Number(document.getElementById("fixedExpense")?.value) || 0;
+
+  const doctorCost =
+    revenue * (doctorPercent / 100);
+
+  const cogs =
+    revenue * (cogsPercent / 100);
+
+  const operatingSurplus =
+    revenue - doctorCost - cogs - fixedExpense;
+
+
+  /* ===============================
+     2️⃣ GODFATHER PART
+  =============================== */
+
   const godfatherAmount =
     Number(document.getElementById("godfatherAmount")?.value) || 0;
 
+  const godfatherCost =
+    godfatherAmount * 0.01;
+
   let injectionUsed = 0;
+
+
+  /* ===============================
+     3️⃣ PRIVATE INVESTORS PART
+  =============================== */
+
   let newPrivateInterest = 0;
 
   baseInvestors.forEach(inv => {
@@ -223,7 +359,6 @@ function calculateOutcome() {
     const skipMonths =
       Number(skipInput?.value) || 0;
 
-    // If allocation exceeds principal, clamp
     const effectiveAllocation =
       Math.min(allocation, inv.principal);
 
@@ -232,7 +367,6 @@ function calculateOutcome() {
     const remainingPrincipal =
       inv.principal - effectiveAllocation;
 
-    // Determine rate
     let originalRate = 0;
 
     if (inv.monthlyInterest > 0) {
@@ -246,9 +380,7 @@ function calculateOutcome() {
       finalRate = negotiatedRate;
     }
 
-    // Skip logic
     if (skipMonths > 0) {
-      // temporarily zero interest
       return;
     }
 
@@ -257,24 +389,153 @@ function calculateOutcome() {
 
   });
 
-  const godfatherCost =
-    godfatherAmount * 0.01;
+
+  /* ===============================
+     4️⃣ PERSONAL BANK LOANS
+  =============================== */
+
+  let newPersonalEMI = 0;
+
+  bankLoans.forEach(loan => {
+
+    const closeInput =
+      document.querySelector(
+        `.bank-close[data-id='${loan.id}']`
+      );
+
+    const close =
+      closeInput?.checked;
+
+    if (close) {
+      injectionUsed += loan.principal;
+      return;
+    }
+
+    newPersonalEMI += loan.emi;
+
+  });
+
+
+  /* ===============================
+     5️⃣ BUSINESS LOANS
+  =============================== */
+
+  let newBusinessEMI = 0;
+
+  businessLoans.forEach(loan => {
+
+    const closeInput =
+      document.querySelector(
+        `.business-close[data-id='${loan.id}']`
+      );
+
+    const close =
+      closeInput?.checked;
+
+    if (close) {
+      injectionUsed += loan.principal;
+      return;
+    }
+
+    newBusinessEMI += loan.emi;
+
+  });
+
+
+  /* ===============================
+     6️⃣ VALIDATION CHECK
+  =============================== */
+
+  if (injectionUsed > godfatherAmount) {
+    alert("⚠ Allocation exceeds Godfather amount!");
+    return;
+  }
+
+
+  /* ===============================
+     7️⃣ FINAL MONTHLY STRUCTURE
+  =============================== */
+
+  const totalMonthlyBurden =
+    newPrivateInterest +
+    newPersonalEMI +
+    newBusinessEMI +
+    godfatherCost;
+
+  const netMonthly =
+    operatingSurplus - totalMonthlyBurden;
 
   const remainingBuffer =
     godfatherAmount - injectionUsed;
 
-  const totalPrivateBurden =
-    newPrivateInterest + godfatherCost;
 
-  // Display result
+  /* ===============================
+     8️⃣ RUNWAY CALCULATION
+  =============================== */
+
+  let runway;
+
+  if (netMonthly >= 0) {
+    runway = "Stable – Positive Monthly Cashflow";
+  } else if (remainingBuffer > 0) {
+    runway =
+      (remainingBuffer / Math.abs(netMonthly))
+        .toFixed(1) + " months";
+  } else {
+    runway = "Immediate Stress";
+  }
+
+
+  /* ===============================
+     9️⃣ SURVIVAL STATUS
+  =============================== */
+
+  let statusColor =
+    netMonthly >= 0 ? "lime" : "red";
+
+  let statusText =
+    netMonthly >= 0
+      ? "🟢 SURVIVING"
+      : "🔴 DEFICIT";
+
+
+  /* ===============================
+     🔟 DISPLAY RESULTS
+  =============================== */
+
   const results =
     document.getElementById("results");
 
   results.innerHTML = `
-    <h3>Post-Restructure Summary</h3>
 
-    <p><strong>Godfather Total:</strong>
-    ₹ ${(godfatherAmount/100000).toFixed(2)} L</p>
+    <h3>Post-Restructure Survival Report</h3>
+
+    <p><strong>Operating Surplus:</strong>
+    ₹ ${(operatingSurplus/100000).toFixed(2)} L</p>
+
+    <hr>
+
+    <p><strong>Private Interest:</strong>
+    ₹ ${(newPrivateInterest/100000).toFixed(2)} L</p>
+
+    <p><strong>Personal EMI:</strong>
+    ₹ ${(newPersonalEMI/100000).toFixed(2)} L</p>
+
+    <p><strong>Business EMI:</strong>
+    ₹ ${(newBusinessEMI/100000).toFixed(2)} L</p>
+
+    <p><strong>Godfather Cost (1%):</strong>
+    ₹ ${(godfatherCost/100000).toFixed(2)} L</p>
+
+    <hr>
+
+    <p><strong>Total Monthly Burden:</strong>
+    ₹ ${(totalMonthlyBurden/100000).toFixed(2)} L</p>
+
+    <p><strong>Net Monthly Position:</strong>
+    ₹ ${(netMonthly/100000).toFixed(2)} L</p>
+
+    <hr>
 
     <p><strong>Injection Used:</strong>
     ₹ ${(injectionUsed/100000).toFixed(2)} L</p>
@@ -282,18 +543,17 @@ function calculateOutcome() {
     <p><strong>Remaining Buffer:</strong>
     ₹ ${(remainingBuffer/100000).toFixed(2)} L</p>
 
-    <hr>
+    <p><strong>Runway:</strong> ${runway}</p>
 
-    <p><strong>New Private Interest:</strong>
-    ₹ ${(newPrivateInterest/100000).toFixed(2)} L</p>
+    <h3 style="color:${statusColor};">
+      ${statusText}
+    </h3>
 
-    <p><strong>Godfather Monthly Cost (1%):</strong>
-    ₹ ${(godfatherCost/100000).toFixed(2)} L</p>
-
-    <p><strong>Total Private Burden:</strong>
-    ₹ ${(totalPrivateBurden/100000).toFixed(2)} L</p>
   `;
 }
+
+
+
 function addPrivate() {
   privateInvestors.push({
     name: "Investor " + (privateInvestors.length + 1),

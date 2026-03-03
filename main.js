@@ -4,110 +4,30 @@ import {
   getDocs
 } from "./firebase.js";
 
-let baseInvestors = [];
-let decisions = {};
-let privateInvestors = [];
+/* ==============================
+   GLOBAL STATE
+============================== */
 
-let bankLoans = [
-  {
-    id: "hdfc",
-    name: "HDFC Block",
-    emi: 46000,
-    principal: 600000
-  },
-  {
-    id: "bajajHero",
-    name: "Bajaj + Hero",
-    emi: 30000,
-    principal: 600000
-  },
-  {
-    id: "financeCorp",
-    name: "FinanceCorp",
-    emi: 19000,
-    principal: 600000
-  }
+let baseInvestors = [];
+
+let personalLoans = [
+  { id: "hdfc", name: "HDFC Block", emi: 46000, principal: 600000 },
+  { id: "bajajHero", name: "Bajaj + Hero", emi: 30000, principal: 600000 },
+  { id: "financeCorp", name: "FinanceCorp", emi: 19000, principal: 600000 }
 ];
 
-function renderBankUI() {
+let businessLoans = [
+  { id: "lendingkart", name: "Lendingkart", emi: 88000, principal: 1100000 },
+  { id: "hdfcBusiness", name: "HDFC Business", emi: 72000, principal: 1600000 },
+  { id: "bajajBusiness", name: "Bajaj Business", emi: 42000, principal: 1100000 }
+];
 
-  const container =
-    document.getElementById("bankContainer");
-
-  container.innerHTML = "";
-
-  bankLoans.forEach(loan => {
-
-    container.innerHTML += `
-      <div class="investor-card">
-
-        <div class="investor-header"
-          data-id="${loan.id}">
-
-          <h3>${loan.name}</h3>
-
-          <div>
-            EMI ₹ ${(loan.emi/100000).toFixed(2)}L
-          </div>
-
-        </div>
-
-        <div class="investor-body"
-          id="bank-${loan.id}"
-          style="display:none;">
-
-          <p><strong>Outstanding:</strong>
-          ₹ ${(loan.principal/100000).toFixed(2)} L</p>
-
-          <p><strong>Monthly EMI:</strong>
-          ₹ ${(loan.emi/100000).toFixed(2)} L</p>
-
-          <hr>
-
-          <label>Close Fully</label>
-          <input type="checkbox"
-            class="bank-close"
-            data-id="${loan.id}">
-
-          <label>Reduce Principal (₹)</label>
-          <input type="number"
-            class="bank-reduce"
-            data-id="${loan.id}">
-
-        </div>
-      </div>
-    `;
-  });
-
-  attachBankToggle();
-}
-
-function attachBankToggle() {
-
-  document
-    .querySelectorAll("#bankContainer .investor-header")
-    .forEach(header => {
-
-      header.addEventListener("click", () => {
-
-        const id = header.dataset.id;
-
-        document
-          .querySelectorAll("#bankContainer .investor-body")
-          .forEach(body => body.style.display = "none");
-
-        const target =
-          document.getElementById("bank-" + id);
-
-        target.style.display = "block";
-      });
-
-    });
-}
-
+/* ==============================
+   LOAD PRIVATE INVESTORS
+============================== */
 
 async function loadPrivateInvestors() {
-  const snap = await getDocs(collection(db,"privateInvestors"));
+  const snap = await getDocs(collection(db, "privateInvestors"));
 
   baseInvestors = snap.docs.map(doc => ({
     id: doc.id,
@@ -117,13 +37,14 @@ async function loadPrivateInvestors() {
   renderPrivateUI();
 }
 
+/* ==============================
+   PRIVATE UI
+============================== */
+
 function renderPrivateUI() {
 
-  const container =
-    document.getElementById("privateContainer");
-
-  const summary =
-    document.getElementById("privateSummary");
+  const container = document.getElementById("privateContainer");
+  const summary = document.getElementById("privateSummary");
 
   if (!container) return;
 
@@ -150,147 +71,244 @@ function renderPrivateUI() {
     container.innerHTML += `
       <div class="investor-card">
 
-        <div class="investor-header"
-          data-id="${inv.id}">
-
+        <div class="investor-header" data-id="${inv.id}">
           <h3>${inv.name}</h3>
-
           <div>
             ₹ ${(inv.principal/100000).toFixed(1)}L
-            <span class="toggle-icon"
-              id="icon-${inv.id}">+</span>
+            <span class="toggle-icon" id="icon-${inv.id}">+</span>
           </div>
-
         </div>
 
         <div class="investor-body"
-          id="body-${inv.id}"
-          style="display:none;">
+             id="body-${inv.id}"
+             style="display:none;">
 
-         <p><strong>Principal:</strong>
-₹ ${(inv.principal/100000).toFixed(2)} L</p>
+          <p><strong>Principal:</strong>
+          ₹ ${(inv.principal/100000).toFixed(2)} L</p>
 
-<p><strong>Monthly Interest:</strong>
-₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
+          <p><strong>Monthly Interest:</strong>
+          ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
 
-<p><strong>Effective Rate:</strong>
-${rate}%</p>
+          <p><strong>Effective Rate:</strong>
+          ${rate}%</p>
 
-<hr>
+          <hr>
 
-<label>Allocate from Godfather (₹)</label>
-<input type="number"
-  class="allocate-input"
-  data-id="${inv.id}"
-  placeholder="0">
+          <label>Allocate from Godfather (₹)</label>
+          <input type="number"
+            class="allocate-input"
+            data-id="${inv.id}"
+            placeholder="0">
 
-<div class="negotiation-section"
-  id="negotiation-${inv.id}"
-  style="display:none;">
+          <div class="negotiation-section"
+               id="negotiation-${inv.id}"
+               style="display:none;">
 
-  <label>New Negotiated Rate %</label>
-  <input type="number"
-    class="new-rate"
-    data-id="${inv.id}">
+            <label>New Negotiated Rate %</label>
+            <input type="number"
+              class="new-rate"
+              data-id="${inv.id}">
 
-  <label>Skip Months</label>
-  <input type="number"
-    class="skip-months"
-    data-id="${inv.id}">
+            <label>Skip Months</label>
+            <input type="number"
+              class="skip-months"
+              data-id="${inv.id}">
 
-</div>
+          </div>
+
+        </div>
+      </div>
     `;
   });
 
-  // Auto-close logic
+  attachPrivateEvents();
+}
+
+/* ==============================
+   PRIVATE EVENTS
+============================== */
+
+function attachPrivateEvents() {
+
   document
-    .querySelectorAll(".investor-header")
+    .querySelectorAll("#privateContainer .investor-header")
     .forEach(header => {
 
       header.addEventListener("click", () => {
 
         const id = header.dataset.id;
 
-        // Close all first
         document
-          .querySelectorAll(".investor-body")
-          .forEach(body => {
-            body.style.display = "none";
-          });
+          .querySelectorAll("#privateContainer .investor-body")
+          .forEach(body => body.style.display = "none");
 
         document
-          .querySelectorAll(".toggle-icon")
-          .forEach(icon => {
-            icon.innerText = "+";
-          });
+          .querySelectorAll("#privateContainer .toggle-icon")
+          .forEach(icon => icon.innerText = "+");
 
-        // Open selected
-        const body =
-          document.getElementById("body-" + id);
-
-        const icon =
-          document.getElementById("icon-" + id);
+        const body = document.getElementById("body-" + id);
+        const icon = document.getElementById("icon-" + id);
 
         body.style.display = "block";
         icon.innerText = "−";
-
       });
 
     });
 
-    document
-  .querySelectorAll(".allocate-input")
-  .forEach(input => {
+  document
+    .querySelectorAll(".allocate-input")
+    .forEach(input => {
 
-    input.addEventListener("input", () => {
+      input.addEventListener("input", () => {
 
-      const id = input.dataset.id;
-      const value = Number(input.value) || 0;
+        const id = input.dataset.id;
+        const value = Number(input.value) || 0;
 
-      const negotiation =
-        document.getElementById("negotiation-" + id);
+        const negotiation =
+          document.getElementById("negotiation-" + id);
 
-      if (value > 0) {
-        negotiation.style.display = "block";
-      } else {
-        negotiation.style.display = "none";
-      }
+        negotiation.style.display =
+          value > 0 ? "block" : "none";
+
+      });
 
     });
+}
 
+/* ==============================
+   PERSONAL LOANS UI
+============================== */
+
+function renderPersonalLoans() {
+
+  const container =
+    document.getElementById("personalLoanContainer");
+
+  container.innerHTML = "";
+
+  personalLoans.forEach(loan => {
+
+    container.innerHTML += `
+      <div class="investor-card">
+
+        <div class="investor-header" data-id="${loan.id}">
+          <h3>${loan.name}</h3>
+          <div>EMI ₹ ${(loan.emi/100000).toFixed(2)}L</div>
+        </div>
+
+        <div class="investor-body"
+             id="personal-${loan.id}"
+             style="display:none;">
+
+          <p><strong>Outstanding:</strong>
+          ₹ ${(loan.principal/100000).toFixed(2)} L</p>
+
+          <p><strong>Monthly EMI:</strong>
+          ₹ ${(loan.emi/100000).toFixed(2)} L</p>
+
+          <label>Close Fully</label>
+          <input type="checkbox"
+            class="personal-close"
+            data-id="${loan.id}">
+        </div>
+      </div>
+    `;
   });
+
+  attachLoanToggle("#personalLoanContainer", "personal");
 }
 
-function toggleInvestor(id) {
+/* ==============================
+   BUSINESS LOANS UI
+============================== */
 
-  const body =
-    document.getElementById("body-" + id);
+function renderBusinessLoans() {
 
-  const icon =
-    document.getElementById("icon-" + id);
+  const container =
+    document.getElementById("businessLoanContainer");
 
-  if (body.style.display === "block") {
-    body.style.display = "none";
-    icon.innerText = "+";
-  } else {
-    body.style.display = "block";
-    icon.innerText = "−";
-  }
+  container.innerHTML = "";
+
+  businessLoans.forEach(loan => {
+
+    container.innerHTML += `
+      <div class="investor-card">
+
+        <div class="investor-header" data-id="${loan.id}">
+          <h3>${loan.name}</h3>
+          <div>EMI ₹ ${(loan.emi/100000).toFixed(2)}L</div>
+        </div>
+
+        <div class="investor-body"
+             id="business-${loan.id}"
+             style="display:none;">
+
+          <p><strong>Outstanding:</strong>
+          ₹ ${(loan.principal/100000).toFixed(2)} L</p>
+
+          <p><strong>Monthly EMI:</strong>
+          ₹ ${(loan.emi/100000).toFixed(2)} L</p>
+
+          <label>Close Fully</label>
+          <input type="checkbox"
+            class="business-close"
+            data-id="${loan.id}">
+        </div>
+      </div>
+    `;
+  });
+
+  attachLoanToggle("#businessLoanContainer", "business");
 }
 
+/* ==============================
+   GENERIC LOAN TOGGLE
+============================== */
 
+function attachLoanToggle(containerSelector, prefix) {
 
-function setDecision(id,key,value) {
-  if (!decisions[id]) decisions[id] = {};
-  decisions[id][key] = value;
+  document
+    .querySelectorAll(`${containerSelector} .investor-header`)
+    .forEach(header => {
+
+      header.addEventListener("click", () => {
+
+        const id = header.dataset.id;
+
+        document
+          .querySelectorAll(`${containerSelector} .investor-body`)
+          .forEach(body => body.style.display = "none");
+
+        const target =
+          document.getElementById(`${prefix}-${id}`);
+
+        target.style.display = "block";
+      });
+
+    });
 }
 
+/* ==============================
+   INITIALIZE
+============================== */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  await loadPrivateInvestors();
+
+  renderPersonalLoans();
+  renderBusinessLoans();
+
+});
+
+
+/* ==============================
+   FULL SURVIVAL CALCULATION
+============================== */
 
 function calculateOutcome() {
 
-  /* ===============================
-     1️⃣ BUSINESS OPERATING PART
-  =============================== */
+  /* ========= 1️⃣ OPERATING ========= */
 
   const revenue =
     Number(document.getElementById("revenue")?.value) || 0;
@@ -304,19 +322,14 @@ function calculateOutcome() {
   const fixedExpense =
     Number(document.getElementById("fixedExpense")?.value) || 0;
 
-  const doctorCost =
-    revenue * (doctorPercent / 100);
-
-  const cogs =
-    revenue * (cogsPercent / 100);
+  const doctorCost = revenue * (doctorPercent / 100);
+  const cogs = revenue * (cogsPercent / 100);
 
   const operatingSurplus =
     revenue - doctorCost - cogs - fixedExpense;
 
 
-  /* ===============================
-     2️⃣ GODFATHER PART
-  =============================== */
+  /* ========= 2️⃣ GODFATHER ========= */
 
   const godfatherAmount =
     Number(document.getElementById("godfatherAmount")?.value) || 0;
@@ -327,37 +340,26 @@ function calculateOutcome() {
   let injectionUsed = 0;
 
 
-  /* ===============================
-     3️⃣ PRIVATE INVESTORS PART
-  =============================== */
+  /* ========= 3️⃣ PRIVATE ========= */
 
   let newPrivateInterest = 0;
 
   baseInvestors.forEach(inv => {
 
-    const allocationInput =
-      document.querySelector(
-        `.allocate-input[data-id='${inv.id}']`
-      );
-
-    const rateInput =
-      document.querySelector(
-        `.new-rate[data-id='${inv.id}']`
-      );
-
-    const skipInput =
-      document.querySelector(
-        `.skip-months[data-id='${inv.id}']`
-      );
-
     const allocation =
-      Number(allocationInput?.value) || 0;
+      Number(document.querySelector(
+        `.allocate-input[data-id='${inv.id}']`
+      )?.value) || 0;
 
     const negotiatedRate =
-      Number(rateInput?.value);
+      Number(document.querySelector(
+        `.new-rate[data-id='${inv.id}']`
+      )?.value);
 
     const skipMonths =
-      Number(skipInput?.value) || 0;
+      Number(document.querySelector(
+        `.skip-months[data-id='${inv.id}']`
+      )?.value) || 0;
 
     const effectiveAllocation =
       Math.min(allocation, inv.principal);
@@ -380,9 +382,7 @@ function calculateOutcome() {
       finalRate = negotiatedRate;
     }
 
-    if (skipMonths > 0) {
-      return;
-    }
+    if (skipMonths > 0) return;
 
     newPrivateInterest +=
       remainingPrincipal * (finalRate / 100);
@@ -390,21 +390,16 @@ function calculateOutcome() {
   });
 
 
-  /* ===============================
-     4️⃣ PERSONAL BANK LOANS
-  =============================== */
+  /* ========= 4️⃣ PERSONAL LOANS ========= */
 
   let newPersonalEMI = 0;
 
-  bankLoans.forEach(loan => {
-
-    const closeInput =
-      document.querySelector(
-        `.bank-close[data-id='${loan.id}']`
-      );
+  personalLoans.forEach(loan => {
 
     const close =
-      closeInput?.checked;
+      document.querySelector(
+        `.personal-close[data-id='${loan.id}']`
+      )?.checked;
 
     if (close) {
       injectionUsed += loan.principal;
@@ -416,21 +411,16 @@ function calculateOutcome() {
   });
 
 
-  /* ===============================
-     5️⃣ BUSINESS LOANS
-  =============================== */
+  /* ========= 5️⃣ BUSINESS LOANS ========= */
 
   let newBusinessEMI = 0;
 
   businessLoans.forEach(loan => {
 
-    const closeInput =
+    const close =
       document.querySelector(
         `.business-close[data-id='${loan.id}']`
-      );
-
-    const close =
-      closeInput?.checked;
+      )?.checked;
 
     if (close) {
       injectionUsed += loan.principal;
@@ -442,9 +432,7 @@ function calculateOutcome() {
   });
 
 
-  /* ===============================
-     6️⃣ VALIDATION CHECK
-  =============================== */
+  /* ========= 6️⃣ VALIDATION ========= */
 
   if (injectionUsed > godfatherAmount) {
     alert("⚠ Allocation exceeds Godfather amount!");
@@ -452,9 +440,7 @@ function calculateOutcome() {
   }
 
 
-  /* ===============================
-     7️⃣ FINAL MONTHLY STRUCTURE
-  =============================== */
+  /* ========= 7️⃣ FINAL BURDEN ========= */
 
   const totalMonthlyBurden =
     newPrivateInterest +
@@ -469,14 +455,12 @@ function calculateOutcome() {
     godfatherAmount - injectionUsed;
 
 
-  /* ===============================
-     8️⃣ RUNWAY CALCULATION
-  =============================== */
+  /* ========= 8️⃣ RUNWAY ========= */
 
   let runway;
 
   if (netMonthly >= 0) {
-    runway = "Stable – Positive Monthly Cashflow";
+    runway = "Stable – Positive Cashflow";
   } else if (remainingBuffer > 0) {
     runway =
       (remainingBuffer / Math.abs(netMonthly))
@@ -486,9 +470,25 @@ function calculateOutcome() {
   }
 
 
-  /* ===============================
-     9️⃣ SURVIVAL STATUS
-  =============================== */
+  /* ========= 9️⃣ 3-MONTH WARNING ========= */
+
+  let warning = "";
+
+  if (netMonthly < 0) {
+    const requiredBuffer =
+      Math.abs(netMonthly) * 3;
+
+    if (remainingBuffer < requiredBuffer) {
+      warning = `
+        <p style="color:orange;">
+        ⚠ Buffer less than 3-month safety level
+        </p>
+      `;
+    }
+  }
+
+
+  /* ========= 🔟 STATUS ========= */
 
   let statusColor =
     netMonthly >= 0 ? "lime" : "red";
@@ -499,16 +499,14 @@ function calculateOutcome() {
       : "🔴 DEFICIT";
 
 
-  /* ===============================
-     🔟 DISPLAY RESULTS
-  =============================== */
+  /* ========= DISPLAY ========= */
 
   const results =
     document.getElementById("results");
 
   results.innerHTML = `
 
-    <h3>Post-Restructure Survival Report</h3>
+    <h3>Survival Report</h3>
 
     <p><strong>Operating Surplus:</strong>
     ₹ ${(operatingSurplus/100000).toFixed(2)} L</p>
@@ -545,36 +543,15 @@ function calculateOutcome() {
 
     <p><strong>Runway:</strong> ${runway}</p>
 
+    ${warning}
+
     <h3 style="color:${statusColor};">
       ${statusText}
     </h3>
-
   `;
 }
 
 
-
-function addPrivate() {
-  privateInvestors.push({
-    name: "Investor " + (privateInvestors.length + 1),
-    principal: 0,
-    rate: 2,
-    close: false,
-    reduce: 0,
-    newRate: null
-  });
-  renderPrivate();
-}
-
-function addBank() {
-  bankLoans.push({
-    name: "Loan " + (bankLoans.length + 1),
-    principal: 0,
-    emi: 0,
-    close: false
-  });
-  renderBank();
-}
 
 function renderPrivate() {
   const container = document.getElementById("privateList");

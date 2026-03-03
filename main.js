@@ -71,65 +71,63 @@ function renderPrivateUI() {
       : 0;
 
     container.innerHTML += `
-      <div class="investor-card">
+  <div class="investor-card">
 
-        <div class="investor-header" data-id="${inv.id}">
-          <h3>${inv.name}</h3>
-          <div>
-            ₹ ${(inv.principal/100000).toFixed(1)}L
-            <span class="toggle-icon" id="icon-${inv.id}">+</span>
-          </div>
-        </div>
-
-        <div class="investor-body"
-             id="body-${inv.id}"
-             style="display:none;">
-
-          <p><strong>Principal:</strong>
-          ₹ ${(inv.principal/100000).toFixed(2)} L</p>
-
-          <p><strong>Monthly Interest:</strong>
-          ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
-
-          <p><strong>Effective Rate:</strong>
-          ${rate}%</p>
-
-          <hr>
-
-        <label>Allocate from Godfather (₹)</label>
-
-<div style="display:flex; gap:6px;">
-  <input type="number"
-    class="allocate-input"
-    data-id="${inv.id}"
-    placeholder="0">
-
-  <button
-    class="allocate-btn"
-    data-id="${inv.id}">
-    Add
-  </button>
-</div>
-
-          <div class="negotiation-section"
-               id="negotiation-${inv.id}"
-               style="display:none;">
-
-            <label>New Negotiated Rate %</label>
-            <input type="number"
-              class="new-rate"
-              data-id="${inv.id}">
-
-            <label>Skip Months</label>
-            <input type="number"
-              class="skip-months"
-              data-id="${inv.id}">
-
-          </div>
-
-        </div>
+    <div class="investor-header" data-id="${inv.id}">
+      <h3>${inv.name}</h3>
+      <div>
+        ₹ ${(inv.principal/100000).toFixed(1)}L
+        <span class="toggle-icon" id="icon-${inv.id}">+</span>
       </div>
-    `;
+    </div>
+
+    <div class="investor-body"
+         id="body-${inv.id}"
+         style="display:none;">
+
+      <p><strong>Principal:</strong>
+      ₹ ${(inv.principal/100000).toFixed(2)} L</p>
+
+      <p><strong>Monthly Interest:</strong>
+      ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
+
+      <hr>
+
+      <label>Allocate from Godfather (₹)</label>
+
+      <div style="display:flex; gap:6px;">
+        <input type="number"
+          class="allocate-input"
+          data-id="${inv.id}"
+          placeholder="0">
+
+        <button
+          class="allocate-btn"
+          data-id="${inv.id}">
+          Add
+        </button>
+      </div>
+
+      <p>
+        Allocated:
+        ₹ <span id="allocated-${inv.id}">0</span>
+      </p>
+
+      <hr>
+
+      <label>New Negotiated Rate %</label>
+      <input type="number"
+        class="new-rate"
+        data-id="${inv.id}">
+
+      <label>Skip Months</label>
+      <input type="number"
+        class="skip-months"
+        data-id="${inv.id}">
+
+    </div>
+  </div>
+`;
   });
 attachAllocationButtons();
   attachPrivateEvents();
@@ -168,13 +166,17 @@ function attachAllocationButtons() {
 
         allocationMap[id] = amount;
 
+        document.getElementById(
+          `allocated-${id}`
+        ).innerText =
+          (amount/100000).toFixed(2) + " L";
+
         updateStickyBar();
 
       });
 
     });
 }
-
 function updateStickyBar() {
 
   const totalUsed =
@@ -256,40 +258,50 @@ function renderPersonalLoans() {
   personalLoans.forEach(loan => {
 
     container.innerHTML += `
-      <div class="investor-card">
+  <div class="investor-card">
 
-        <div class="investor-header" data-id="${loan.id}">
-          <h3>${loan.name}</h3>
-          <div>EMI ₹ ${(loan.emi/100000).toFixed(2)}L</div>
-        </div>
-
-        <div class="investor-body"
-             id="personal-${loan.id}"
-             style="display:none;">
-
-          <p><strong>Outstanding:</strong>
-          ₹ ${(loan.principal/100000).toFixed(2)} L</p>
-
-          <p><strong>Monthly EMI:</strong>
-          ₹ ${(loan.emi/100000).toFixed(2)} L</p>
-
-         <label>Allocate to Close (₹)</label>
-
-<div style="display:flex; gap:6px;">
-  <input type="number"
-    class="personal-allocate"
-    data-id="${loan.id}"
-    placeholder="0">
-
-  <button
-    class="personal-allocate-btn"
-    data-id="${loan.id}">
-    Add
-  </button>
-</div>
-        </div>
+    <div class="investor-header" data-id="${loan.id}">
+      <h3>${loan.name}</h3>
+      <div>
+        EMI ₹ ${(loan.emi/100000).toFixed(2)}L
       </div>
-    `;
+    </div>
+
+    <div class="investor-body"
+         id="personal-${loan.id}"
+         style="display:none;">
+
+      <p><strong>Outstanding:</strong>
+      ₹ ${(loan.principal/100000).toFixed(2)} L</p>
+
+      <p><strong>Monthly EMI:</strong>
+      ₹ ${(loan.emi/100000).toFixed(2)} L</p>
+
+      <hr>
+
+      <label>Allocate to Close (₹)</label>
+
+      <div style="display:flex; gap:6px;">
+        <input type="number"
+          class="personal-allocate"
+          data-id="${loan.id}"
+          placeholder="0">
+
+        <button
+          class="personal-allocate-btn"
+          data-id="${loan.id}">
+          Add
+        </button>
+      </div>
+
+      <p>
+        Allocated:
+        ₹ <span id="allocated-${loan.id}">0</span>
+      </p>
+
+    </div>
+  </div>
+`;
   });
   attachAllocationButtons();
   attachLoanToggle("#personalLoanContainer", "personal");
@@ -309,40 +321,50 @@ function renderBusinessLoans() {
   businessLoans.forEach(loan => {
 
     container.innerHTML += `
-      <div class="investor-card">
+  <div class="investor-card">
 
-        <div class="investor-header" data-id="${loan.id}">
-          <h3>${loan.name}</h3>
-          <div>EMI ₹ ${(loan.emi/100000).toFixed(2)}L</div>
-        </div>
-
-        <div class="investor-body"
-             id="business-${loan.id}"
-             style="display:none;">
-
-          <p><strong>Outstanding:</strong>
-          ₹ ${(loan.principal/100000).toFixed(2)} L</p>
-
-          <p><strong>Monthly EMI:</strong>
-          ₹ ${(loan.emi/100000).toFixed(2)} L</p>
-
-          <label>Allocate to Close (₹)</label>
-
-<div style="display:flex; gap:6px;">
-  <input type="number"
-    class="business-allocate"
-    data-id="${loan.id}"
-    placeholder="0">
-
-  <button
-    class="business-allocate-btn"
-    data-id="${loan.id}">
-    Add
-  </button>
-</div>
-        </div>
+    <div class="investor-header" data-id="${loan.id}">
+      <h3>${loan.name}</h3>
+      <div>
+        EMI ₹ ${(loan.emi/100000).toFixed(2)}L
       </div>
-    `;
+    </div>
+
+    <div class="investor-body"
+         id="business-${loan.id}"
+         style="display:none;">
+
+      <p><strong>Outstanding:</strong>
+      ₹ ${(loan.principal/100000).toFixed(2)} L</p>
+
+      <p><strong>Monthly EMI:</strong>
+      ₹ ${(loan.emi/100000).toFixed(2)} L</p>
+
+      <hr>
+
+      <label>Allocate to Close (₹)</label>
+
+      <div style="display:flex; gap:6px;">
+        <input type="number"
+          class="business-allocate"
+          data-id="${loan.id}"
+          placeholder="0">
+
+        <button
+          class="business-allocate-btn"
+          data-id="${loan.id}">
+          Add
+        </button>
+      </div>
+
+      <p>
+        Allocated:
+        ₹ <span id="allocated-${loan.id}">0</span>
+      </p>
+
+    </div>
+  </div>
+`;
   });
 attachAllocationButtons();
   attachLoanToggle("#businessLoanContainer", "business");

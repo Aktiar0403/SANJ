@@ -38,7 +38,19 @@ async function loadPrivateInvestors() {
 
   renderPrivateUI();
 }
+/* ==============================
+   UNIT CONVERSION (LAKHS MODE)
+============================== */
 
+function L(value) {
+  // Lakhs → Rupees
+  return Number(value) * 100000;
+}
+
+function toL(value) {
+  // Rupees → Lakhs (2 decimal)
+  return (Number(value) / 100000).toFixed(2);
+}
 /* ==============================
    PRIVATE UI
 ============================== */
@@ -380,7 +392,8 @@ function confirmInjection() {
     return;
   }
 
-  confirmedInjection = input;
+  confirmedInjection =
+  L(document.getElementById("godfatherInput")?.value || 0);
 
   // Update sticky immediately
   document.getElementById("gfTotal").innerText =
@@ -427,7 +440,7 @@ function calculateOutcome() {
     Number(document.getElementById("cogsPercent")?.value) || 0;
 
   const fixedExpense =
-    Number(document.getElementById("fixedExpense")?.value) || 0;
+  L(document.getElementById("fixedExpense")?.value || 0);
 
   const doctorCost = revenue * (doctorPercent / 100);
   const cogs = revenue * (cogsPercent / 100);
@@ -754,7 +767,7 @@ document.getElementById("modalAddBtn")
   .addEventListener("click", () => {
 
     const amount =
-      Number(document.getElementById("modalAllocation").value) || 0;
+  L(document.getElementById("modalAllocation").value || 0);
 
     if (amount <= 0) {
       alert("Enter valid amount");

@@ -131,9 +131,50 @@ function renderPrivateUI() {
       </div>
     `;
   });
-
+attachAllocationButtons();
   attachPrivateEvents();
 }
+function attachAllocationButtons() {
+
+  document
+    .querySelectorAll(".allocate-btn, .personal-allocate-btn, .business-allocate-btn")
+    .forEach(btn => {
+
+      btn.addEventListener("click", () => {
+
+        const id = btn.dataset.id;
+
+        const input =
+          document.querySelector(
+            `[data-id='${id}'][type='number']`
+          );
+
+        const amount =
+          Number(input?.value) || 0;
+
+        if (amount <= 0) {
+          alert("Enter valid amount");
+          return;
+        }
+
+        const totalUsed =
+          Object.values(allocationMap)
+                .reduce((a,b)=>a+b,0);
+
+        if (totalUsed + amount > confirmedInjection) {
+          alert("Not enough remaining injection");
+          return;
+        }
+
+        allocationMap[id] = amount;
+
+        updateStickyBar();
+
+      });
+
+    });
+}
+
 function updateStickyBar() {
 
   const totalUsed =
@@ -250,7 +291,7 @@ function renderPersonalLoans() {
       </div>
     `;
   });
-
+  attachAllocationButtons();
   attachLoanToggle("#personalLoanContainer", "personal");
 }
 
@@ -303,7 +344,7 @@ function renderBusinessLoans() {
       </div>
     `;
   });
-
+attachAllocationButtons();
   attachLoanToggle("#businessLoanContainer", "business");
 }
 

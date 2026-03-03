@@ -658,12 +658,12 @@ results.innerHTML = `
 
     <div class="hero-card">
       <h4>Total Monthly Burden</h4>
-      <h2>₹ ${(totalMonthlyBurden/100000).toFixed(2)} L</h2>
+      <h2>₹ ${toL(totalMonthlyBurden)} L</h2>
     </div>
 
-    <div class="${heroClass}">
+    <div class="${netMonthly >= 0 ? "hero-card hero-positive" : "hero-card hero-negative"}">
       <h4>Net Monthly Position</h4>
-      <h2>₹ ${(netMonthly/100000).toFixed(2)} L</h2>
+      <h2>₹ ${toL(netMonthly)} L</h2>
     </div>
 
   </div>
@@ -671,30 +671,28 @@ results.innerHTML = `
   <div class="summary-block">
 
     <p><strong>Operating Surplus:</strong>
-    ₹ ${(operatingSurplus/100000).toFixed(2)} L</p>
+    ₹ ${toL(operatingSurplus)} L</p>
 
     <hr>
 
     <p><strong>Commission:</strong>
-    ₹ ${(newPrivateInterest/100000).toFixed(2)} L</p>
+    ₹ ${toL(newPrivateInterest)} L</p>
 
     <p><strong>Total EMI (Personal + Business):</strong>
-    ₹ ${(totalEMI/100000).toFixed(2)} L</p>
+    ₹ ${toL(newPersonalEMI + newBusinessEMI)} L</p>
 
     <p><strong>Godfather Cost (1%):</strong>
-    ₹ ${(godfatherCost/100000).toFixed(2)} L</p>
+    ₹ ${toL(godfatherCost)} L</p>
 
     <hr>
 
     <p><strong>Injection Used:</strong>
-    ₹ ${(injectionUsed/100000).toFixed(2)} L</p>
+    ₹ ${toL(injectionUsed)} L</p>
 
     <p><strong>Remaining Buffer:</strong>
-    ₹ ${(remainingBuffer/100000).toFixed(2)} L</p>
+    ₹ ${toL(remainingBuffer)} L</p>
 
     <p><strong>Runway:</strong> ${runway}</p>
-
-    ${warning}
 
   </div>
 `;

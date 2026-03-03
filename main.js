@@ -378,14 +378,21 @@ function confirmInjection() {
 
 function calculateOutcome() {
 
-if (confirmedInjection <= 0) {
-  alert("Please confirm Godfather injection first.");
-  return;
-}
+  /* ==============================
+     1️⃣ VALIDATE INJECTION
+  ============================== */
+
+  if (confirmedInjection <= 0) {
+    alert("Please confirm Godfather injection first.");
+    return;
+  }
+
+  const godfatherAmount = confirmedInjection;
 
 
-
-  /* ========= 1️⃣ OPERATING ========= */
+  /* ==============================
+     2️⃣ OPERATING CALCULATION
+  ============================== */
 
   const revenue =
     Number(document.getElementById("revenue")?.value) || 0;
@@ -406,34 +413,17 @@ if (confirmedInjection <= 0) {
     revenue - doctorCost - cogs - fixedExpense;
 
 
-  /* ========= 2️⃣ GODFATHER ========= */
-
-  const godfatherAmount = confirmedInjection;
-
-  const godfatherCost =
-    godfatherAmount * 0.01;
-
-  let injectionUsed = 0;
-
-
-  /* ========= 3️⃣ PRIVATE ========= */
+  /* ==============================
+     3️⃣ PRIVATE INVESTORS
+  ============================== */
 
   let newPrivateInterest = 0;
+  let injectionUsed = 0;
 
   baseInvestors.forEach(inv => {
 
-  const allocation =
-  allocationMap[inv.id] || 0;
-
-    const negotiatedRate =
-      Number(document.querySelector(
-        `.new-rate[data-id='${inv.id}']`
-      )?.value);
-
-    const skipMonths =
-      Number(document.querySelector(
-        `.skip-months[data-id='${inv.id}']`
-      )?.value) || 0;
+    const allocation =
+      allocationMap[inv.id] || 0;
 
     const effectiveAllocation =
       Math.min(allocation, inv.principal);
@@ -450,6 +440,16 @@ if (confirmedInjection <= 0) {
         (inv.monthlyInterest / inv.principal) * 100;
     }
 
+    const negotiatedRate =
+      Number(document.querySelector(
+        `.new-rate[data-id='${inv.id}']`
+      )?.value);
+
+    const skipMonths =
+      Number(document.querySelector(
+        `.skip-months[data-id='${inv.id}']`
+      )?.value) || 0;
+
     let finalRate = originalRate;
 
     if (effectiveAllocation > 0 && negotiatedRate) {
@@ -464,22 +464,18 @@ if (confirmedInjection <= 0) {
   });
 
 
-  /* ========= 4️⃣ PERSONAL LOANS ========= */
+  /* ==============================
+     4️⃣ PERSONAL LOANS
+  ============================== */
 
   let newPersonalEMI = 0;
 
   personalLoans.forEach(loan => {
 
-  const allocation =
-  allocationMap[loan.id] || 0;
+    const allocation =
+      allocationMap[loan.id] || 0;
 
-if (allocation >= loan.principal) {
-  injectionUsed += loan.principal;
-  return;
-}
-newBusinessEMI += loan.emi;
-
-    if (close) {
+    if (allocation >= loan.principal) {
       injectionUsed += loan.principal;
       return;
     }
@@ -489,18 +485,18 @@ newBusinessEMI += loan.emi;
   });
 
 
-  /* ========= 5️⃣ BUSINESS LOANS ========= */
+  /* ==============================
+     5️⃣ BUSINESS LOANS
+  ============================== */
 
   let newBusinessEMI = 0;
 
   businessLoans.forEach(loan => {
 
-    const close =
-      document.querySelector(
-        `.business-close[data-id='${loan.id}']`
-      )?.checked;
+    const allocation =
+      allocationMap[loan.id] || 0;
 
-    if (close) {
+    if (allocation >= loan.principal) {
       injectionUsed += loan.principal;
       return;
     }
@@ -510,15 +506,27 @@ newBusinessEMI += loan.emi;
   });
 
 
-  /* ========= 6️⃣ VALIDATION ========= */
+  /* ==============================
+     6️⃣ VALIDATE OVER-ALLOCATION
+  ============================== */
 
   if (injectionUsed > godfatherAmount) {
-    alert("⚠ Allocation exceeds Godfather amount!");
+    alert("⚠ Allocation exceeds confirmed injection!");
     return;
   }
 
 
-  /* ========= 7️⃣ FINAL BURDEN ========= */
+  /* ==============================
+     7️⃣ GODFATHER COST
+  ============================== */
+
+  const godfatherCost =
+    godfatherAmount * 0.01;
+
+
+  /* ==============================
+     8️⃣ FINAL MONTHLY BURDEN
+  ============================== */
 
   const totalMonthlyBurden =
     newPrivateInterest +
@@ -533,33 +541,9 @@ newBusinessEMI += loan.emi;
     godfatherAmount - injectionUsed;
 
 
-   /* ========= UPDATE STICKY BAR ========= */
-
-const gfTotal = document.getElementById("gfTotal");
-const gfUsed = document.getElementById("gfUsed");
-const gfRemaining = document.getElementById("gfRemaining");
-
-gfTotal.innerText =
-  "₹ " + (godfatherAmount/100000).toFixed(2) + " L";
-
-gfUsed.innerText =
-  "₹ " + (injectionUsed/100000).toFixed(2) + " L";
-
-gfRemaining.innerText =
-  "₹ " + (remainingBuffer/100000).toFixed(2) + " L";
-
-// Color logic
-gfRemaining.classList.remove("stable","warning","danger");
-
-if (remainingBuffer < 0) {
-  gfRemaining.classList.add("danger");
-} else if (remainingBuffer < godfatherAmount * 0.25) {
-  gfRemaining.classList.add("warning");
-} else {
-  gfRemaining.classList.add("stable");
-} 
-
-  /* ========= 8️⃣ RUNWAY ========= */
+  /* ==============================
+     9️⃣ RUNWAY
+  ============================== */
 
   let runway;
 
@@ -574,36 +558,48 @@ if (remainingBuffer < 0) {
   }
 
 
-  /* ========= 9️⃣ 3-MONTH WARNING ========= */
+  /* ==============================
+     🔟 3-MONTH SAFETY CHECK
+  ============================== */
 
   let warning = "";
 
   if (netMonthly < 0) {
-    const requiredBuffer =
+    const required3MonthBuffer =
       Math.abs(netMonthly) * 3;
 
-    if (remainingBuffer < requiredBuffer) {
-      warning = `
-        <p style="color:orange;">
-        ⚠ Buffer less than 3-month safety level
-        </p>
-      `;
+    if (remainingBuffer < required3MonthBuffer) {
+      warning =
+        `<p style="color:orange;">
+         ⚠ Buffer below 3-month safety level
+         </p>`;
     }
   }
 
 
-  /* ========= 🔟 STATUS ========= */
+  /* ==============================
+     1️⃣1️⃣ UPDATE STICKY BAR
+  ============================== */
 
-  let statusColor =
+  updateStickyBar();
+
+
+  /* ==============================
+     1️⃣2️⃣ STATUS
+  ============================== */
+
+  const statusColor =
     netMonthly >= 0 ? "lime" : "red";
 
-  let statusText =
+  const statusText =
     netMonthly >= 0
       ? "🟢 SURVIVING"
       : "🔴 DEFICIT";
 
 
-  /* ========= DISPLAY ========= */
+  /* ==============================
+     1️⃣3️⃣ DISPLAY RESULTS
+  ============================== */
 
   const results =
     document.getElementById("results");
@@ -652,9 +648,9 @@ if (remainingBuffer < 0) {
     <h3 style="color:${statusColor};">
       ${statusText}
     </h3>
+
   `;
 }
-
 
 
 function renderPrivate() {

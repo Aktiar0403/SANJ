@@ -9,7 +9,7 @@ import {
 ============================== */
 
 let baseInvestors = [];
-
+let allocationMap = {};
 let confirmedInjection = 0;
 
 let personalLoans = [
@@ -96,11 +96,20 @@ function renderPrivateUI() {
 
           <hr>
 
-          <label>Allocate from Godfather (₹)</label>
-          <input type="number"
-            class="allocate-input"
-            data-id="${inv.id}"
-            placeholder="0">
+        <label>Allocate from Godfather (₹)</label>
+
+<div style="display:flex; gap:6px;">
+  <input type="number"
+    class="allocate-input"
+    data-id="${inv.id}"
+    placeholder="0">
+
+  <button
+    class="allocate-btn"
+    data-id="${inv.id}">
+    Add
+  </button>
+</div>
 
           <div class="negotiation-section"
                id="negotiation-${inv.id}"
@@ -125,7 +134,22 @@ function renderPrivateUI() {
 
   attachPrivateEvents();
 }
+function updateStickyBar() {
 
+  const totalUsed =
+    Object.values(allocationMap)
+          .reduce((a,b)=>a+b,0);
+
+  const remaining =
+    confirmedInjection - totalUsed;
+
+  document.getElementById("gfUsed").innerText =
+    "₹ " + (totalUsed/100000).toFixed(2) + " L";
+
+  document.getElementById("gfRemaining").innerText =
+    "₹ " + (remaining/100000).toFixed(2) + " L";
+
+}
 /* ==============================
    PRIVATE EVENTS
 ============================== */
@@ -208,10 +232,20 @@ function renderPersonalLoans() {
           <p><strong>Monthly EMI:</strong>
           ₹ ${(loan.emi/100000).toFixed(2)} L</p>
 
-          <label>Close Fully</label>
-          <input type="checkbox"
-            class="personal-close"
-            data-id="${loan.id}">
+         <label>Allocate to Close (₹)</label>
+
+<div style="display:flex; gap:6px;">
+  <input type="number"
+    class="personal-allocate"
+    data-id="${loan.id}"
+    placeholder="0">
+
+  <button
+    class="personal-allocate-btn"
+    data-id="${loan.id}">
+    Add
+  </button>
+</div>
         </div>
       </div>
     `;
@@ -251,10 +285,20 @@ function renderBusinessLoans() {
           <p><strong>Monthly EMI:</strong>
           ₹ ${(loan.emi/100000).toFixed(2)} L</p>
 
-          <label>Close Fully</label>
-          <input type="checkbox"
-            class="business-close"
-            data-id="${loan.id}">
+          <label>Allocate to Close (₹)</label>
+
+<div style="display:flex; gap:6px;">
+  <input type="number"
+    class="business-allocate"
+    data-id="${loan.id}"
+    placeholder="0">
+
+  <button
+    class="business-allocate-btn"
+    data-id="${loan.id}">
+    Add
+  </button>
+</div>
         </div>
       </div>
     `;
@@ -378,10 +422,8 @@ if (confirmedInjection <= 0) {
 
   baseInvestors.forEach(inv => {
 
-    const allocation =
-      Number(document.querySelector(
-        `.allocate-input[data-id='${inv.id}']`
-      )?.value) || 0;
+  const allocation =
+  allocationMap[inv.id] || 0;
 
     const negotiatedRate =
       Number(document.querySelector(
@@ -428,10 +470,14 @@ if (confirmedInjection <= 0) {
 
   personalLoans.forEach(loan => {
 
-    const close =
-      document.querySelector(
-        `.personal-close[data-id='${loan.id}']`
-      )?.checked;
+  const allocation =
+  allocationMap[loan.id] || 0;
+
+if (allocation >= loan.principal) {
+  injectionUsed += loan.principal;
+  return;
+}
+newBusinessEMI += loan.emi;
 
     if (close) {
       injectionUsed += loan.principal;
@@ -757,3 +803,115 @@ if (injectBtn) {
   }
 
 });
+document
+  .querySelectorAll(".allocate-btn")
+  .forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      const id = btn.dataset.id;
+
+      const input =
+        document.querySelector(
+          `.allocate-input[data-id='${id}']`
+        );
+
+      const amount =
+        Number(input.value) || 0;
+
+      if (amount <= 0) {
+        alert("Enter valid amount");
+        return;
+      }
+
+      const totalUsed =
+        Object.values(allocationMap)
+              .reduce((a,b)=>a+b,0);
+
+      if (totalUsed + amount > confirmedInjection) {
+        alert("Not enough remaining injection");
+        return;
+      }
+
+      allocationMap[id] =
+        (allocationMap[id] || 0) + amount;
+
+      input.value = allocationMap[id];
+      updateStickyBar();
+
+    });
+
+  });
+  document
+  .querySelectorAll(".personal-allocate-btn")
+  .forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      const id = btn.dataset.id;
+
+      const input =
+        document.querySelector(
+          `.personal-allocate[data-id='${id}']`
+        );
+
+      const amount =
+        Number(input.value) || 0;
+
+      const totalUsed =
+        Object.values(allocationMap)
+              .reduce((a,b)=>a+b,0);
+
+      if (totalUsed + amount > confirmedInjection) {
+        alert("Not enough remaining injection");
+        return;
+      }
+
+      allocationMap[id] =
+        (allocationMap[id] || 0) + amount;
+
+      input.value = allocationMap[id];
+
+      updateStickyBar();
+
+    });
+
+  });
+
+  document
+  .querySelectorAll(".business-allocate-btn")
+  .forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      const id = btn.dataset.id;
+
+      const input =
+        document.querySelector(
+          `.business-allocate[data-id='${id}']`
+        );
+
+      const amount =
+        Number(input.value) || 0;
+
+      if (amount <= 0) {
+        alert("Enter valid amount");
+        return;
+      }
+
+      const totalUsed =
+        Object.values(allocationMap)
+              .reduce((a,b)=>a+b,0);
+
+      if (totalUsed + amount > confirmedInjection) {
+        alert("Not enough remaining injection");
+        return;
+      }
+
+      allocationMap[id] = amount;
+
+      updateStickyBar();
+
+    });
+
+  });

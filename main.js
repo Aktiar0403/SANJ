@@ -647,37 +647,52 @@ function calculateOutcome() {
      1️⃣3️⃣ DISPLAY RESULTS
   ============================== */
 
-  const results =
-    document.getElementById("results");
+ /* ==============================
+   DISPLAY RESULTS (UPGRADED UI)
+============================== */
 
-  results.innerHTML = `
+const totalEMI =
+  newPersonalEMI + newBusinessEMI;
 
-    <h3>Survival Report</h3>
+const results =
+  document.getElementById("results");
+
+const heroClass =
+  netMonthly >= 0
+    ? "hero-card hero-positive"
+    : "hero-card hero-negative";
+
+results.innerHTML = `
+
+  <div class="hero-container">
+
+    <div class="hero-card">
+      <h4>Total Monthly Burden</h4>
+      <h2>₹ ${(totalMonthlyBurden/100000).toFixed(2)} L</h2>
+    </div>
+
+    <div class="${heroClass}">
+      <h4>Net Monthly Position</h4>
+      <h2>₹ ${(netMonthly/100000).toFixed(2)} L</h2>
+    </div>
+
+  </div>
+
+  <div class="summary-block">
 
     <p><strong>Operating Surplus:</strong>
     ₹ ${(operatingSurplus/100000).toFixed(2)} L</p>
 
     <hr>
 
-    <p><strong>Private Interest:</strong>
+    <p><strong>Commission:</strong>
     ₹ ${(newPrivateInterest/100000).toFixed(2)} L</p>
 
-    <p><strong>Personal EMI:</strong>
-    ₹ ${(newPersonalEMI/100000).toFixed(2)} L</p>
-
-    <p><strong>Business EMI:</strong>
-    ₹ ${(newBusinessEMI/100000).toFixed(2)} L</p>
+    <p><strong>Total EMI (Personal + Business):</strong>
+    ₹ ${(totalEMI/100000).toFixed(2)} L</p>
 
     <p><strong>Godfather Cost (1%):</strong>
     ₹ ${(godfatherCost/100000).toFixed(2)} L</p>
-
-    <hr>
-
-    <p><strong>Total Monthly Burden:</strong>
-    ₹ ${(totalMonthlyBurden/100000).toFixed(2)} L</p>
-
-    <p><strong>Net Monthly Position:</strong>
-    ₹ ${(netMonthly/100000).toFixed(2)} L</p>
 
     <hr>
 
@@ -691,11 +706,8 @@ function calculateOutcome() {
 
     ${warning}
 
-    <h3 style="color:${statusColor};">
-      ${statusText}
-    </h3>
-
-  `;
+  </div>
+`;
 }
 /* ==========================================
    INITIALIZATION

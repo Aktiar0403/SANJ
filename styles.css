@@ -123,3 +123,43 @@ button {
 .danger {
   color: red;
 }
+
+
+.hero-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.hero-card {
+  flex: 1;
+  min-width: 160px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #1f2937;
+  text-align: center;
+  box-shadow: 0 0 12px rgba(0,0,0,0.3);
+}
+
+.hero-card h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.hero-positive {
+  background: #064e3b;
+  color: #10b981;
+}
+
+.hero-negative {
+  background: #4c0519;
+  color: #ef4444;
+}
+
+.summary-block {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #111827;
+}

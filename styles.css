@@ -163,3 +163,185 @@ button {
   border-radius: 12px;
   background: #111827;
 }
+
+/* ==========================================
+   GLOBAL DARK FINANCIAL THEME
+========================================== */
+
+body {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #0f172a, #0b1120);
+  color: #e5e7eb;
+  margin: 0;
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================
+   SECTION CARD
+========================================== */
+
+.card {
+  background: rgba(17, 24, 39, 0.9);
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  border-radius: 18px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(55, 65, 81, 0.4);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+/* ==========================================
+   INVESTOR / LOAN CARD
+========================================== */
+
+.investor-card {
+  background: linear-gradient(145deg, #111827, #1f2937);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.investor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+.investor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: linear-gradient(90deg, #1f2937, #111827);
+  border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.investor-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.toggle-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+/* ==========================================
+   BODY
+========================================== */
+
+.investor-body {
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.95);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.investor-body p {
+  margin: 6px 0;
+  font-size: 13px;
+  color: #d1d5db;
+}
+
+/* ==========================================
+   INPUTS
+========================================== */
+
+.investor-body input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  background: #0f172a;
+  color: #f9fafb;
+  margin-bottom: 10px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.investor-body input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.investor-body button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  color: white;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.investor-body button:hover {
+  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   ALLOCATED TEXT
+========================================== */
+
+[id^="allocated-"] {
+  font-weight: 600;
+  color: #22c55e;
+}
+
+/* ==========================================
+   EMI / COMMISSION LABEL STYLE
+========================================== */
+
+.summary-block p strong {
+  color: #93c5fd;
+}
+
+/* ==========================================
+   RESPONSIVE MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+
+  .investor-header h3 {
+    font-size: 14px;
+  }
+
+  .investor-body {
+    padding: 12px;
+  }
+
+  .investor-body input {
+    font-size: 12px;
+  }
+
+  .investor-body button {
+    font-size: 12px;
+  }
+}

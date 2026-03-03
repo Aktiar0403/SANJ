@@ -345,32 +345,3 @@ h2 {
     font-size: 12px;
   }
 }
-
-/* ==========================================
-   PRIVATE INVESTOR GRID LAYOUT
-========================================== */
-
-.investor-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-/* Make cards stretch nicely */
-.investor-grid .investor-card {
-  height: fit-content;
-}
-
-/* Tablet */
-@media (max-width: 1024px) {
-  .investor-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .investor-grid {
-    grid-template-columns: 1fr;
-  }
-}

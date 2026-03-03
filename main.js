@@ -224,24 +224,7 @@ function attachPrivateEvents() {
 
     });
 
-  document
-    .querySelectorAll(".allocate-input")
-    .forEach(input => {
 
-      input.addEventListener("input", () => {
-
-        const id = input.dataset.id;
-        const value = Number(input.value) || 0;
-
-        const negotiation =
-          document.getElementById("negotiation-" + id);
-
-        negotiation.style.display =
-          value > 0 ? "block" : "none";
-
-      });
-
-    });
 }
 
 /* ==============================

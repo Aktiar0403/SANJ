@@ -651,263 +651,39 @@ function calculateOutcome() {
 
   `;
 }
-
-
-function renderPrivate() {
-  const container = document.getElementById("privateList");
-  container.innerHTML = "";
-
-  privateInvestors.forEach((inv, i) => {
-    container.innerHTML += `
-      <div class="investor">
-        <strong>${inv.name}</strong>
-        <label>Principal</label>
-        <input type="number" onchange="privateInvestors[${i}].principal=this.value" />
-        <label>Rate %</label>
-        <input type="number" onchange="privateInvestors[${i}].rate=this.value" />
-        <label>Reduce Principal</label>
-        <input type="number" onchange="privateInvestors[${i}].reduce=this.value" />
-        <label>New Rate (optional)</label>
-        <input type="number" onchange="privateInvestors[${i}].newRate=this.value" />
-        <label>
-          <input type="checkbox" onchange="privateInvestors[${i}].close=this.checked" />
-          Close Fully
-        </label>
-      </div>
-    `;
-  });
-}
-
-function renderBank() {
-  const container = document.getElementById("bankList");
-  container.innerHTML = "";
-
-  bankLoans.forEach((loan, i) => {
-    container.innerHTML += `
-      <div class="investor">
-        <strong>${loan.name}</strong>
-        <label>Principal</label>
-        <input type="number" onchange="bankLoans[${i}].principal=this.value" />
-        <label>EMI</label>
-        <input type="number" onchange="bankLoans[${i}].emi=this.value" />
-        <label>
-          <input type="checkbox" onchange="bankLoans[${i}].close=this.checked" />
-          Close Fully
-        </label>
-      </div>
-    `;
-  });
-}
-
-function calculate() {
-  const revenue = Number(document.getElementById("revenue").value);
-  const doctorPercent = Number(document.getElementById("doctorPercent").value);
-  const cogsPercent = Number(document.getElementById("cogsPercent").value);
-  const fixedExpense = Number(document.getElementById("fixedExpense").value);
-  const godfatherAmount = Number(document.getElementById("godfatherAmount").value);
-
-  // Operating
-  const doctorCost = revenue * (doctorPercent / 100);
-  const cogs = revenue * (cogsPercent / 100);
-  const operatingSurplus = revenue - doctorCost - cogs - fixedExpense;
-
-  let injectionUsed = 0;
-  let privateInterest = 0;
-  let bankEMI = 0;
-
-  privateInvestors.forEach(inv => {
-    if (inv.close) {
-      injectionUsed += Number(inv.principal);
-      return;
-    }
-
-    const reducedPrincipal =
-      Number(inv.principal) - Number(inv.reduce || 0);
-
-    injectionUsed += Number(inv.reduce || 0);
-
-    const finalRate = inv.newRate
-      ? Number(inv.newRate)
-      : Number(inv.rate);
-
-    privateInterest +=
-      reducedPrincipal * (finalRate / 100);
-  });
-
-  bankLoans.forEach(loan => {
-    if (loan.close) {
-      injectionUsed += Number(loan.principal);
-      return;
-    }
-
-    bankEMI += Number(loan.emi);
-  });
-
-  // Godfather cost
-  const godfatherCost =
-    godfatherAmount * 0.01;
-
-  const totalBurden =
-    privateInterest + bankEMI + godfatherCost;
-
-  const netMonthly =
-    operatingSurplus - totalBurden;
-
-  const buffer =
-    godfatherAmount - injectionUsed;
-
-  let runway = "Stable";
-
-  if (netMonthly < 0 && buffer > 0) {
-    runway = (buffer / Math.abs(netMonthly)).toFixed(1) + " months";
-  }
-
-  document.getElementById("results").innerHTML = `
-    <p><strong>Operating Surplus:</strong> ₹${operatingSurplus.toFixed(0)}</p>
-    <p><strong>Private Interest:</strong> ₹${privateInterest.toFixed(0)}</p>
-    <p><strong>Bank EMI:</strong> ₹${bankEMI.toFixed(0)}</p>
-    <p><strong>Godfather Cost (1%):</strong> ₹${godfatherCost.toFixed(0)}</p>
-    <hr>
-    <p><strong>Total Monthly Burden:</strong> ₹${totalBurden.toFixed(0)}</p>
-    <p><strong>Net Monthly Position:</strong> ₹${netMonthly.toFixed(0)}</p>
-    <p><strong>Injection Used:</strong> ₹${injectionUsed.toFixed(0)}</p>
-    <p><strong>Remaining Buffer:</strong> ₹${buffer.toFixed(0)}</p>
-    <p><strong>Runway:</strong> ${runway}</p>
-  `;
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadPrivateInvestors();
-});
-
+/* ==========================================
+   INITIALIZATION
+========================================== */
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-const injectBtn = document.getElementById("injectBtn");
-
-if (injectBtn) {
-  injectBtn.addEventListener("click", confirmInjection);
-}
-
-
+  // Load Private Investors from Firebase
   await loadPrivateInvestors();
 
-  const btn = document.getElementById("calculateBtn");
+  // Render Personal & Business Loans
+  renderPersonalLoans();
+  renderBusinessLoans();
 
-  if (btn) {
-    btn.addEventListener("click", calculateOutcome);
+  // Confirm Injection Button
+  const injectBtn =
+    document.getElementById("injectBtn");
+
+  if (injectBtn) {
+    injectBtn.addEventListener(
+      "click",
+      confirmInjection
+    );
+  }
+
+  // Calculate Button
+  const calculateBtn =
+    document.getElementById("calculateBtn");
+
+  if (calculateBtn) {
+    calculateBtn.addEventListener(
+      "click",
+      calculateOutcome
+    );
   }
 
 });
-document
-  .querySelectorAll(".allocate-btn")
-  .forEach(btn => {
-
-    btn.addEventListener("click", () => {
-
-      const id = btn.dataset.id;
-
-      const input =
-        document.querySelector(
-          `.allocate-input[data-id='${id}']`
-        );
-
-      const amount =
-        Number(input.value) || 0;
-
-      if (amount <= 0) {
-        alert("Enter valid amount");
-        return;
-      }
-
-      const totalUsed =
-        Object.values(allocationMap)
-              .reduce((a,b)=>a+b,0);
-
-      if (totalUsed + amount > confirmedInjection) {
-        alert("Not enough remaining injection");
-        return;
-      }
-
-      allocationMap[id] =
-        (allocationMap[id] || 0) + amount;
-
-      input.value = allocationMap[id];
-      updateStickyBar();
-
-    });
-
-  });
-  document
-  .querySelectorAll(".personal-allocate-btn")
-  .forEach(btn => {
-
-    btn.addEventListener("click", () => {
-
-      const id = btn.dataset.id;
-
-      const input =
-        document.querySelector(
-          `.personal-allocate[data-id='${id}']`
-        );
-
-      const amount =
-        Number(input.value) || 0;
-
-      const totalUsed =
-        Object.values(allocationMap)
-              .reduce((a,b)=>a+b,0);
-
-      if (totalUsed + amount > confirmedInjection) {
-        alert("Not enough remaining injection");
-        return;
-      }
-
-      allocationMap[id] =
-        (allocationMap[id] || 0) + amount;
-
-      input.value = allocationMap[id];
-
-      updateStickyBar();
-
-    });
-
-  });
-
-  document
-  .querySelectorAll(".business-allocate-btn")
-  .forEach(btn => {
-
-    btn.addEventListener("click", () => {
-
-      const id = btn.dataset.id;
-
-      const input =
-        document.querySelector(
-          `.business-allocate[data-id='${id}']`
-        );
-
-      const amount =
-        Number(input.value) || 0;
-
-      if (amount <= 0) {
-        alert("Enter valid amount");
-        return;
-      }
-
-      const totalUsed =
-        Object.values(allocationMap)
-              .reduce((a,b)=>a+b,0);
-
-      if (totalUsed + amount > confirmedInjection) {
-        alert("Not enough remaining injection");
-        return;
-      }
-
-      allocationMap[id] = amount;
-
-      updateStickyBar();
-
-    });
-
-  });

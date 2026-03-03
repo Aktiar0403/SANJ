@@ -95,3 +95,31 @@ button {
   margin-bottom: 10px;
   border: 1px solid #334155;
 }
+
+#godfatherSticky {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: #111827;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #334155;
+  font-size: 14px;
+}
+
+#godfatherSticky span {
+  font-weight: bold;
+}
+
+.stable {
+  color: lime;
+}
+
+.warning {
+  color: orange;
+}
+
+.danger {
+  color: red;
+}

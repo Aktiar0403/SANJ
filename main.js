@@ -455,6 +455,32 @@ function calculateOutcome() {
     godfatherAmount - injectionUsed;
 
 
+   /* ========= UPDATE STICKY BAR ========= */
+
+const gfTotal = document.getElementById("gfTotal");
+const gfUsed = document.getElementById("gfUsed");
+const gfRemaining = document.getElementById("gfRemaining");
+
+gfTotal.innerText =
+  "₹ " + (godfatherAmount/100000).toFixed(2) + " L";
+
+gfUsed.innerText =
+  "₹ " + (injectionUsed/100000).toFixed(2) + " L";
+
+gfRemaining.innerText =
+  "₹ " + (remainingBuffer/100000).toFixed(2) + " L";
+
+// Color logic
+gfRemaining.classList.remove("stable","warning","danger");
+
+if (remainingBuffer < 0) {
+  gfRemaining.classList.add("danger");
+} else if (remainingBuffer < godfatherAmount * 0.25) {
+  gfRemaining.classList.add("warning");
+} else {
+  gfRemaining.classList.add("stable");
+} 
+
   /* ========= 8️⃣ RUNWAY ========= */
 
   let runway;

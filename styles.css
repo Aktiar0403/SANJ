@@ -164,3 +164,57 @@ button {
   background: #111827;
 }
 
+/* MODAL BACKDROP */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  justify-content: center;
+  align-items: center;
+}
+
+/* MODAL BOX */
+.modal-content {
+  background: #111827;
+  width: 90%;
+  max-width: 420px;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  animation: fadeInModal 0.2s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.close-modal {
+  float: right;
+  font-size: 22px;
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+.modal-section input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #0f172a;
+  color: white;
+}
+
+#modalAddBtn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(90deg,#3b82f6,#2563eb);
+  border: none;
+  color: white;
+  cursor: pointer;
+}

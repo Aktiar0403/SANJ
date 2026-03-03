@@ -7,7 +7,7 @@ import {
 /* ==============================
    GLOBAL STATE
 ============================== */
-
+let negotiationMap = {};
 let baseInvestors = [];
 let allocationMap = {};
 let confirmedInjection = 0;
@@ -59,78 +59,57 @@ function renderPrivateUI() {
   });
 
   summary.innerHTML = `
-    <strong>Total Monthly Private Interest:</strong>
+    <strong>Total Monthly Commission:</strong>
     ₹ ${(totalInterest/100000).toFixed(2)} L
   `;
 
   baseInvestors.forEach(inv => {
 
-    const rate =
-      inv.monthlyInterest > 0
-      ? ((inv.monthlyInterest / inv.principal) * 100).toFixed(2)
-      : 0;
-
     container.innerHTML += `
-  <div class="investor-card">
+      <div class="investor-card">
 
-    <div class="investor-header" data-id="${inv.id}">
-      <h3>${inv.name}</h3>
-      <div>
-        ₹ ${(inv.principal/100000).toFixed(1)}L
-        <span class="toggle-icon" id="icon-${inv.id}">+</span>
+        <div class="investor-header"
+             data-id="${inv.id}"
+             style="cursor:pointer;">
+
+          <div>
+            <h3>${inv.name}</h3>
+            <small>
+              Principal:
+              ₹ ${(inv.principal/100000).toFixed(2)} L
+            </small>
+          </div>
+
+          <div>
+            Commission:
+            ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L
+          </div>
+
+        </div>
+
       </div>
-    </div>
-
-    <div class="investor-body"
-         id="body-${inv.id}"
-         style="display:none;">
-
-      <p><strong>Principal:</strong>
-      ₹ ${(inv.principal/100000).toFixed(2)} L</p>
-
-      <p><strong>Monthly Interest:</strong>
-      ₹ ${(inv.monthlyInterest/100000).toFixed(2)} L</p>
-
-      <hr>
-
-      <label>Allocate from Godfather (₹)</label>
-
-      <div style="display:flex; gap:6px;">
-        <input type="number"
-          class="allocate-input"
-          data-id="${inv.id}"
-          placeholder="0">
-
-        <button
-          class="allocate-btn"
-          data-id="${inv.id}">
-          Add
-        </button>
-      </div>
-
-      <p>
-        Allocated:
-        ₹ <span id="allocated-${inv.id}">0</span>
-      </p>
-
-      <hr>
-
-      <label>New Negotiated Rate %</label>
-      <input type="number"
-        class="new-rate"
-        data-id="${inv.id}">
-
-      <label>Skip Months</label>
-      <input type="number"
-        class="skip-months"
-        data-id="${inv.id}">
-
-    </div>
-  </div>
-`;
+    `;
   });
-attachAllocationButtons();
-  attachPrivateEvents();
+
+  /* 🔵 OPEN MODAL ON CLICK */
+
+  document
+    .querySelectorAll("#privateContainer .investor-header")
+    .forEach(header => {
+
+      header.addEventListener("click", () => {
+
+        const id = header.dataset.id;
+
+        const investor =
+          baseInvestors.find(inv => inv.id === id);
+
+        openModal(id, investor.name);
+
+      });
+
+    });
+
 }
 function attachAllocationButtons() {
 
@@ -236,58 +215,57 @@ function renderPersonalLoans() {
   const container =
     document.getElementById("personalLoanContainer");
 
+  if (!container) return;
+
   container.innerHTML = "";
 
   personalLoans.forEach(loan => {
 
     container.innerHTML += `
-  <div class="investor-card">
+      <div class="investor-card">
 
-    <div class="investor-header" data-id="${loan.id}">
-      <h3>${loan.name}</h3>
-      <div>
-        EMI ₹ ${(loan.emi/100000).toFixed(2)}L
+        <div class="investor-header"
+             data-id="${loan.id}"
+             style="cursor:pointer;">
+
+          <div>
+            <h3>${loan.name}</h3>
+            <small>
+              Outstanding:
+              ₹ ${(loan.principal/100000).toFixed(2)} L
+            </small>
+          </div>
+
+          <div>
+            EMI:
+            ₹ ${(loan.emi/100000).toFixed(2)} L
+          </div>
+
+        </div>
+
       </div>
-    </div>
-
-    <div class="investor-body"
-         id="personal-${loan.id}"
-         style="display:none;">
-
-      <p><strong>Outstanding:</strong>
-      ₹ ${(loan.principal/100000).toFixed(2)} L</p>
-
-      <p><strong>Monthly EMI:</strong>
-      ₹ ${(loan.emi/100000).toFixed(2)} L</p>
-
-      <hr>
-
-      <label>Allocate to Close (₹)</label>
-
-      <div style="display:flex; gap:6px;">
-        <input type="number"
-          class="personal-allocate"
-          data-id="${loan.id}"
-          placeholder="0">
-
-        <button
-          class="personal-allocate-btn"
-          data-id="${loan.id}">
-          Add
-        </button>
-      </div>
-
-      <p>
-        Allocated:
-        ₹ <span id="allocated-${loan.id}">0</span>
-      </p>
-
-    </div>
-  </div>
-`;
+    `;
   });
-  attachAllocationButtons();
-  attachLoanToggle("#personalLoanContainer", "personal");
+
+  /* 🔵 OPEN MODAL ON CLICK */
+
+  document
+    .querySelectorAll("#personalLoanContainer .investor-header")
+    .forEach(header => {
+
+      header.addEventListener("click", () => {
+
+        const id = header.dataset.id;
+
+        const loan =
+          personalLoans.find(l => l.id === id);
+
+        openModal(id, loan.name);
+
+      });
+
+    });
+
 }
 
 /* ==============================
@@ -299,58 +277,57 @@ function renderBusinessLoans() {
   const container =
     document.getElementById("businessLoanContainer");
 
+  if (!container) return;
+
   container.innerHTML = "";
 
   businessLoans.forEach(loan => {
 
     container.innerHTML += `
-  <div class="investor-card">
+      <div class="investor-card">
 
-    <div class="investor-header" data-id="${loan.id}">
-      <h3>${loan.name}</h3>
-      <div>
-        EMI ₹ ${(loan.emi/100000).toFixed(2)}L
+        <div class="investor-header"
+             data-id="${loan.id}"
+             style="cursor:pointer;">
+
+          <div>
+            <h3>${loan.name}</h3>
+            <small>
+              Outstanding:
+              ₹ ${(loan.principal/100000).toFixed(2)} L
+            </small>
+          </div>
+
+          <div>
+            EMI:
+            ₹ ${(loan.emi/100000).toFixed(2)} L
+          </div>
+
+        </div>
+
       </div>
-    </div>
-
-    <div class="investor-body"
-         id="business-${loan.id}"
-         style="display:none;">
-
-      <p><strong>Outstanding:</strong>
-      ₹ ${(loan.principal/100000).toFixed(2)} L</p>
-
-      <p><strong>Monthly EMI:</strong>
-      ₹ ${(loan.emi/100000).toFixed(2)} L</p>
-
-      <hr>
-
-      <label>Allocate to Close (₹)</label>
-
-      <div style="display:flex; gap:6px;">
-        <input type="number"
-          class="business-allocate"
-          data-id="${loan.id}"
-          placeholder="0">
-
-        <button
-          class="business-allocate-btn"
-          data-id="${loan.id}">
-          Add
-        </button>
-      </div>
-
-      <p>
-        Allocated:
-        ₹ <span id="allocated-${loan.id}">0</span>
-      </p>
-
-    </div>
-  </div>
-`;
+    `;
   });
-attachAllocationButtons();
-  attachLoanToggle("#businessLoanContainer", "business");
+
+  /* 🔵 OPEN MODAL ON CLICK */
+
+  document
+    .querySelectorAll("#businessLoanContainer .investor-header")
+    .forEach(header => {
+
+      header.addEventListener("click", () => {
+
+        const id = header.dataset.id;
+
+        const loan =
+          businessLoans.find(l => l.id === id);
+
+        openModal(id, loan.name);
+
+      });
+
+    });
+
 }
 
 /* ==============================
@@ -743,5 +720,74 @@ document.addEventListener("DOMContentLoaded", async () => {
       calculateOutcome
     );
   }
+
+});
+
+let currentModalId = null;
+
+function openModal(id, name) {
+
+  currentModalId = id;
+
+  document.getElementById("modalTitle").innerText = name;
+
+  document.getElementById("allocationModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("allocationModal").style.display = "none";
+}
+
+document.getElementById("closeModal")
+  .addEventListener("click", closeModal);
+
+
+  document.getElementById("negotiationToggle")
+  .addEventListener("change", function() {
+
+    document.getElementById("negotiationFields")
+      .style.display = this.checked ? "block" : "none";
+
+});
+
+document.getElementById("modalAddBtn")
+  .addEventListener("click", () => {
+
+    const amount =
+      Number(document.getElementById("modalAllocation").value) || 0;
+
+    if (amount <= 0) {
+      alert("Enter valid amount");
+      return;
+    }
+
+    const totalUsed =
+      Object.values(allocationMap)
+            .reduce((a,b)=>a+b,0);
+
+    if (totalUsed + amount > confirmedInjection) {
+      alert("Not enough injection remaining");
+      return;
+    }
+
+    allocationMap[currentModalId] = amount;
+
+    // Save negotiation
+    if (document.getElementById("negotiationToggle").checked) {
+
+      const newRate =
+        Number(document.getElementById("modalNewRate").value);
+
+      const skip =
+        Number(document.getElementById("modalSkipMonths").value);
+
+      negotiationMap[currentModalId] = {
+        newRate,
+        skip
+      };
+    }
+
+    updateStickyBar();
+    closeModal();
 
 });

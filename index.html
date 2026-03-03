@@ -91,5 +91,43 @@
 
 
 <script type="module" src="main.js"></script>
+
+
+
+<div id="allocationModal" class="modal">
+  <div class="modal-content">
+
+    <span class="close-modal" id="closeModal">&times;</span>
+
+    <h3 id="modalTitle"></h3>
+
+    <div class="modal-section">
+
+      <label>Allocate from Godfather (₹)</label>
+      <input type="number" id="modalAllocation">
+
+      <button id="modalAddBtn">Confirm Allocation</button>
+
+    </div>
+
+    <hr>
+
+    <label>
+      <input type="checkbox" id="negotiationToggle">
+      Enable Negotiation
+    </label>
+
+    <div id="negotiationFields" style="display:none;">
+
+      <label>New Rate %</label>
+      <input type="number" id="modalNewRate">
+
+      <label>Skip Months</label>
+      <input type="number" id="modalSkipMonths">
+
+    </div>
+
+  </div>
+</div>
 </body>
 </html>

@@ -682,6 +682,18 @@ results.innerHTML = `
 
   </div>
 `;
+
+
+console.log({
+  revenue,
+  operatingSurplus,
+  newPrivateInterest,
+  newPersonalEMI,
+  newBusinessEMI,
+  godfatherCost,
+  totalMonthlyBurden,
+  netMonthly
+});
 }
 /* ==========================================
    INITIALIZATION

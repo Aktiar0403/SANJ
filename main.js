@@ -426,29 +426,27 @@ function calculateOutcome() {
   const godfatherAmount = confirmedInjection;
 
 
-  /* ==============================
-     2️⃣ OPERATING CALCULATION
-  ============================== */
+/* ==============================
+   2️⃣ OPERATING CALCULATION
+============================== */
 
-  const revenue =
-    Number(document.getElementById("revenue")?.value) || 0;
+const revenue =
+  L(document.getElementById("revenue")?.value || 0);
 
-  const doctorPercent =
-    Number(document.getElementById("doctorPercent")?.value) || 0;
+const doctorPercent =
+  Number(document.getElementById("doctorPercent")?.value) || 0;
 
-  const cogsPercent =
-    Number(document.getElementById("cogsPercent")?.value) || 0;
+const cogsPercent =
+  Number(document.getElementById("cogsPercent")?.value) || 0;
 
-  const fixedExpense =
+const fixedExpense =
   L(document.getElementById("fixedExpense")?.value || 0);
 
-  const doctorCost = revenue * (doctorPercent / 100);
-  const cogs = revenue * (cogsPercent / 100);
+const doctorCost = revenue * (doctorPercent / 100);
+const cogs = revenue * (cogsPercent / 100);
 
-  const operatingSurplus =
-    revenue - doctorCost - cogs - fixedExpense;
-
-
+const operatingSurplus =
+  revenue - doctorCost - cogs - fixedExpense;
   /* ==============================
      3️⃣ PRIVATE INVESTORS
   ============================== */

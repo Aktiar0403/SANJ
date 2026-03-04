@@ -242,3 +242,19 @@ button {
 .impact-card h2{
  font-size:20px;
 }
+
+.action-block{
+ margin-top:20px;
+ background:#020617;
+ padding:15px;
+ border-radius:10px;
+ border:1px solid #334155;
+}
+
+.action-block ul{
+ padding-left:20px;
+}
+
+.action-block li{
+ margin-bottom:6px;
+}

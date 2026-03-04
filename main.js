@@ -422,7 +422,9 @@ function calculateOutcome() {
 let savedByPrincipal = 0;
 let savedByNegotiation = 0;
 let savedBySkip = 0;
+let savedByBankClosure = 0;
 
+let actions = [];
 
   /* ==============================
      1️⃣ VALIDATE INJECTION
@@ -473,6 +475,9 @@ let injectionUsed = 0;
 
 baseInvestors.forEach(inv => {
 
+
+ 
+
   const allocation = allocationMap[inv.id] || 0;
 
   const originalInterest = inv.monthlyInterest;
@@ -496,6 +501,21 @@ baseInvestors.forEach(inv => {
   const adjustedInterest =
     inv.monthlyInterest * interestRatio;
 
+
+     const saved =
+  originalInterest - adjustedInterest;
+
+savedByPrincipal += saved;
+
+if (effectiveAllocation > 0) {
+
+  actions.push(
+    `Principal Reduced → ${inv.name}
+     (₹ ${(effectiveAllocation/100000).toFixed(2)} L)`
+  );
+
+}
+
   savedByPrincipal += (originalInterest - adjustedInterest);
 
   newPrivateInterest += adjustedInterest;
@@ -515,7 +535,10 @@ Object.keys(negotiationMap).forEach(id => {
 
     savedBySkip += inv.monthlyInterest;
 
-    newPrivateInterest -= inv.monthlyInterest;
+    actions.push(
+     `Interest Skipped → ${inv.name}
+      (${negotiation.skip} months)`
+    );
 
   }
 
@@ -531,7 +554,10 @@ Object.keys(negotiationMap).forEach(id => {
 
       savedByNegotiation += diff;
 
-      newPrivateInterest -= diff;
+      actions.push(
+       `Rate Negotiated → ${inv.name}
+        (${negotiation.newRate}% monthly)`
+      );
 
     }
 
@@ -548,19 +574,27 @@ Object.keys(negotiationMap).forEach(id => {
 
   let newPersonalEMI = 0;
 
-  personalLoans.forEach(loan => {
+personalLoans.forEach(loan => {
 
-    const allocation =
-      allocationMap[loan.id] || 0;
+  const allocation =
+    allocationMap[loan.id] || 0;
 
-    if (allocation >= loan.principal) {
-      injectionUsed += loan.principal;
-      return;
-    }
+  if (allocation >= loan.principal) {
 
-    newPersonalEMI += loan.emi;
+    injectionUsed += loan.principal;
 
-  });
+    savedByBankClosure += loan.emi;
+
+    actions.push(
+      `Closed Personal Loan → ${loan.name}`
+    );
+
+    return;
+  }
+
+  newPersonalEMI += loan.emi;
+
+});
 
 
   /* ==============================
@@ -571,18 +605,25 @@ Object.keys(negotiationMap).forEach(id => {
 
   businessLoans.forEach(loan => {
 
-    const allocation =
-      allocationMap[loan.id] || 0;
+  const allocation =
+    allocationMap[loan.id] || 0;
 
-    if (allocation >= loan.principal) {
-      injectionUsed += loan.principal;
-      return;
-    }
+  if (allocation >= loan.principal) {
 
-    newBusinessEMI += loan.emi;
+    injectionUsed += loan.principal;
 
-  });
+    savedByBankClosure += loan.emi;
 
+    actions.push(
+      `Closed Business Loan → ${loan.name}`
+    );
+
+    return;
+  }
+
+  newBusinessEMI += loan.emi;
+
+});
 
   /* ==============================
      6️⃣ VALIDATE OVER-ALLOCATION
@@ -712,20 +753,25 @@ results.innerHTML = `
 
 <div class="impact-grid">
 
-  <div class="impact-card">
-    <h4>Saved by Principal Reduction</h4>
-    <h2>₹ ${toL(savedByPrincipal)} L</h2>
-  </div>
+<div class="impact-card">
+<h4>Saved from Bank EMI</h4>
+<h2>₹ ${toL(savedByBankClosure)} L</h2>
+</div>
 
-  <div class="impact-card">
-    <h4>Saved by Interest Negotiation</h4>
-    <h2>₹ ${toL(savedByNegotiation)} L</h2>
-  </div>
+<div class="impact-card">
+<h4>Saved by Principal Reduction</h4>
+<h2>₹ ${toL(savedByPrincipal)} L</h2>
+</div>
 
-  <div class="impact-card">
-    <h4>Saved by Interest Skip</h4>
-    <h2>₹ ${toL(savedBySkip)} L</h2>
-  </div>
+<div class="impact-card">
+<h4>Saved by Negotiation</h4>
+<h2>₹ ${toL(savedByNegotiation)} L</h2>
+</div>
+
+<div class="impact-card">
+<h4>Saved by Interest Skip</h4>
+<h2>₹ ${toL(savedBySkip)} L</h2>
+</div>
 
 </div>
 
@@ -757,6 +803,19 @@ results.innerHTML = `
     <p><strong>Runway:</strong> ${runway}</p>
 
   </div>
+
+<div class="action-block">
+
+<h3>Restructuring Actions</h3>
+
+<ul>
+
+${actions.map(a => `<li>${a}</li>`).join("")}
+
+</ul>
+
+</div>
+
 `;
 
 

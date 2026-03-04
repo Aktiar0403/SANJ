@@ -474,16 +474,14 @@ const operatingSurplus =
         (inv.monthlyInterest / inv.principal) * 100;
     }
 
-    const negotiatedRate =
-      Number(document.querySelector(
-        `.new-rate[data-id='${inv.id}']`
-      )?.value);
+const negotiated =
+  negotiationMap?.[inv.id] || {};
 
-    const skipMonths =
-      Number(document.querySelector(
-        `.skip-months[data-id='${inv.id}']`
-      )?.value) || 0;
+const negotiatedRate =
+  negotiated.newRate || originalRate;
 
+const skipMonths =
+  negotiated.skip || 0;
     let finalRate = originalRate;
 
     if (effectiveAllocation > 0 && negotiatedRate) {

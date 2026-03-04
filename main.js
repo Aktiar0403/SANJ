@@ -430,8 +430,14 @@ function calculateOutcome() {
    2️⃣ OPERATING CALCULATION
 ============================== */
 
-const revenue =
-  L(document.getElementById("revenue")?.value || 0);
+const revenueInput =
+  Number(document.getElementById("revenue")?.value) || 0;
+
+const fixedExpenseInput =
+  Number(document.getElementById("fixedExpense")?.value) || 0;
+
+const revenue = L(revenueInput);
+const fixedExpense = L(fixedExpenseInput);
 
 const doctorPercent =
   Number(document.getElementById("doctorPercent")?.value) || 0;
@@ -439,11 +445,11 @@ const doctorPercent =
 const cogsPercent =
   Number(document.getElementById("cogsPercent")?.value) || 0;
 
-const fixedExpense =
-  L(document.getElementById("fixedExpense")?.value || 0);
+const doctorCost =
+  revenue * (doctorPercent / 100);
 
-const doctorCost = revenue * (doctorPercent / 100);
-const cogs = revenue * (cogsPercent / 100);
+const cogs =
+  revenue * (cogsPercent / 100);
 
 const operatingSurplus =
   revenue - doctorCost - cogs - fixedExpense;

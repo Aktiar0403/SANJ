@@ -218,3 +218,27 @@ button {
   color: white;
   cursor: pointer;
 }
+
+.impact-grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+ gap:12px;
+ margin-bottom:15px;
+}
+
+.impact-card{
+ background:#020617;
+ border:1px solid #334155;
+ padding:15px;
+ border-radius:10px;
+}
+
+.impact-card h4{
+ font-size:13px;
+ opacity:0.7;
+ margin-bottom:6px;
+}
+
+.impact-card h2{
+ font-size:20px;
+}

@@ -419,6 +419,11 @@ function confirmInjection() {
 
 function calculateOutcome() {
 
+let savedByPrincipal = 0;
+let savedByNegotiation = 0;
+let savedBySkip = 0;
+
+
   /* ==============================
      1️⃣ VALIDATE INJECTION
   ============================== */
@@ -470,6 +475,8 @@ baseInvestors.forEach(inv => {
 
   const allocation = allocationMap[inv.id] || 0;
 
+  const originalInterest = inv.monthlyInterest;
+
   const effectiveAllocation =
     Math.min(allocation, inv.principal);
 
@@ -478,18 +485,62 @@ baseInvestors.forEach(inv => {
   const remainingPrincipal =
     inv.principal - effectiveAllocation;
 
-  if (remainingPrincipal <= 0) return;
+  if (remainingPrincipal <= 0) {
+    savedByPrincipal += originalInterest;
+    return;
+  }
 
-  // proportional interest calculation
   const interestRatio =
     remainingPrincipal / inv.principal;
 
   const adjustedInterest =
     inv.monthlyInterest * interestRatio;
 
+  savedByPrincipal += (originalInterest - adjustedInterest);
+
   newPrivateInterest += adjustedInterest;
 
 });
+
+Object.keys(negotiationMap).forEach(id => {
+
+  const inv =
+    baseInvestors.find(i => i.id === id);
+
+  if (!inv) return;
+
+  const negotiation = negotiationMap[id];
+
+  if (negotiation.skip > 0) {
+
+    savedBySkip += inv.monthlyInterest;
+
+    newPrivateInterest -= inv.monthlyInterest;
+
+  }
+
+  if (negotiation.newRate) {
+
+    const newInterest =
+      inv.principal * (negotiation.newRate / 100);
+
+    const diff =
+      inv.monthlyInterest - newInterest;
+
+    if (diff > 0) {
+
+      savedByNegotiation += diff;
+
+      newPrivateInterest -= diff;
+
+    }
+
+  }
+
+});
+
+
+
 
   /* ==============================
      4️⃣ PERSONAL LOANS
@@ -658,6 +709,26 @@ results.innerHTML = `
     </div>
 
   </div>
+
+<div class="impact-grid">
+
+  <div class="impact-card">
+    <h4>Saved by Principal Reduction</h4>
+    <h2>₹ ${toL(savedByPrincipal)} L</h2>
+  </div>
+
+  <div class="impact-card">
+    <h4>Saved by Interest Negotiation</h4>
+    <h2>₹ ${toL(savedByNegotiation)} L</h2>
+  </div>
+
+  <div class="impact-card">
+    <h4>Saved by Interest Skip</h4>
+    <h2>₹ ${toL(savedBySkip)} L</h2>
+  </div>
+
+</div>
+
 
   <div class="summary-block">
 

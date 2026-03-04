@@ -447,54 +447,38 @@ const cogs = revenue * (cogsPercent / 100);
 
 const operatingSurplus =
   revenue - doctorCost - cogs - fixedExpense;
-  /* ==============================
-     3️⃣ PRIVATE INVESTORS
-  ============================== */
 
-  let newPrivateInterest = 0;
-  let injectionUsed = 0;
+/* ==============================
+   3️⃣ PRIVATE INVESTORS
+============================== */
 
-  baseInvestors.forEach(inv => {
+let newPrivateInterest = 0;
+let injectionUsed = 0;
 
-    const allocation =
-      allocationMap[inv.id] || 0;
+baseInvestors.forEach(inv => {
 
-    const effectiveAllocation =
-      Math.min(allocation, inv.principal);
+  const allocation = allocationMap[inv.id] || 0;
 
-    injectionUsed += effectiveAllocation;
+  const effectiveAllocation =
+    Math.min(allocation, inv.principal);
 
-    const remainingPrincipal =
-      inv.principal - effectiveAllocation;
+  injectionUsed += effectiveAllocation;
 
-    let originalRate = 0;
+  const remainingPrincipal =
+    inv.principal - effectiveAllocation;
 
-    if (inv.monthlyInterest > 0) {
-      originalRate =
-        (inv.monthlyInterest / inv.principal) * 100;
-    }
+  if (remainingPrincipal <= 0) return;
 
-const negotiated =
-  negotiationMap?.[inv.id] || {};
+  // proportional interest calculation
+  const interestRatio =
+    remainingPrincipal / inv.principal;
 
-const negotiatedRate =
-  negotiated.newRate || originalRate;
+  const adjustedInterest =
+    inv.monthlyInterest * interestRatio;
 
-const skipMonths =
-  negotiated.skip || 0;
-    let finalRate = originalRate;
+  newPrivateInterest += adjustedInterest;
 
-    if (effectiveAllocation > 0 && negotiatedRate) {
-      finalRate = negotiatedRate;
-    }
-
-    if (skipMonths > 0) return;
-
-    newPrivateInterest +=
-      remainingPrincipal * (finalRate / 100);
-
-  });
-
+});
 
   /* ==============================
      4️⃣ PERSONAL LOANS

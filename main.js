@@ -42,10 +42,15 @@ async function loadPrivateInvestors() {
    UNIT CONVERSION (LAKHS MODE)
 ============================== */
 
-function L(value) {
-  // Lakhs → Rupees
-  return Number(value) * 100000;
+function L(value){
+  value = Number(value) || 0;
+
+  // prevent double conversion
+  if(value > 1000000) return value;
+
+  return value * 100000;
 }
+
 
 function toL(value) {
   // Rupees → Lakhs (2 decimal)

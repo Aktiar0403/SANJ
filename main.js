@@ -830,11 +830,168 @@ console.log({
   netMonthly
 });
 }
+
+function autoAllocateCapital(){
+
+  if(confirmedInjection <= 0){
+    alert("Confirm injection first");
+    return;
+  }
+
+  allocationMap = {};
+  negotiationMap = {};
+
+  let remaining = confirmedInjection;
+
+  let actions = [];
+
+  /* ============================
+     1️⃣ MANDATORY INVESTOR PAYMENTS
+  ============================ */
+
+  baseInvestors.forEach(inv => {
+
+    if(inv.name === "Sual"){
+
+      const pay = Math.min(300000, remaining);
+
+      allocationMap[inv.id] = pay;
+
+      remaining -= pay;
+
+      actions.push(`Mandatory → Sual ₹${(pay/100000).toFixed(2)}L`);
+
+    }
+
+    if(inv.name === "Bappon BIL"){
+
+      const pay = Math.min(200000, remaining);
+
+      allocationMap[inv.id] = pay;
+
+      remaining -= pay;
+
+      actions.push(`Mandatory → Bappon BIL ₹${(pay/100000).toFixed(2)}L`);
+
+    }
+
+  });
+
+  /* ============================
+     2️⃣ CLOSE HIGH IMPACT BANK LOANS
+  ============================ */
+
+  const allLoans = [
+    ...personalLoans,
+    ...businessLoans
+  ];
+
+  allLoans.forEach(loan => {
+
+    loan.futureBurden =
+      loan.emi * (loan.tenureRemaining || 12);
+
+    loan.score =
+      loan.futureBurden / loan.principal;
+
+  });
+
+  allLoans.sort((a,b)=> b.score - a.score);
+
+  allLoans.forEach(loan => {
+
+    if(remaining <= 0) return;
+
+    if(loan.tenureRemaining && loan.tenureRemaining <= 9){
+      actions.push(`Skipped ${loan.name} (short tenure)`);
+      return;
+    }
+
+    if(remaining >= loan.principal){
+
+      allocationMap[loan.id] = loan.principal;
+
+      remaining -= loan.principal;
+
+      actions.push(`Closed Loan → ${loan.name}`);
+
+    }
+
+  });
+
+  /* ============================
+     3️⃣ TOUCH MULTIPLE INVESTORS
+  ============================ */
+
+  baseInvestors.forEach(inv => {
+
+    if(remaining <= 0) return;
+
+    if(allocationMap[inv.id]) return;
+
+    const partial =
+      Math.min(inv.principal * 0.15, remaining);
+
+    if(partial <= 0) return;
+
+    allocationMap[inv.id] = partial;
+
+    remaining -= partial;
+
+    actions.push(
+      `Partial Payment → ${inv.name}`
+    );
+
+  });
+
+  /* ============================
+     4️⃣ OPTIONAL INTEREST SKIP
+  ============================ */
+
+  baseInvestors.forEach(inv => {
+
+    if(!negotiationMap[inv.id]){
+
+      negotiationMap[inv.id] = {
+        skip: 2
+      };
+
+      actions.push(
+        `Interest Skip → ${inv.name} (2 months)`
+      );
+
+    }
+
+  });
+
+  updateStickyBar();
+
+  console.log("Auto Strategy", actions);
+
+  alert("Auto allocation completed");
+
+}
+
+
+
+
+
 /* ==========================================
    INITIALIZATION
 ========================================== */
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+
+const autoBtn =
+ document.getElementById("autoAllocateBtn");
+
+if(autoBtn){
+ autoBtn.addEventListener(
+   "click",
+   autoAllocateCapital
+ );
+}
 
   // Load Private Investors from Firebase
   await loadPrivateInvestors();

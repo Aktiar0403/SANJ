@@ -833,6 +833,16 @@ console.log({
 
 function autoAllocateCapital(){
 
+const MIN_BUFFER = 1500000;
+
+const mandatoryInvestors = {
+  "Raju": 900000,
+  "Munna Sister": 400000,
+  "Sual": 300000,
+  "Bappon BIL": 200000
+};
+
+
   if(confirmedInjection <= 0){
     alert("Confirm injection first");
     return;
@@ -851,31 +861,26 @@ function autoAllocateCapital(){
 
   baseInvestors.forEach(inv => {
 
-    if(inv.name === "Sual"){
+  const mandatory =
+    mandatoryInvestors[inv.name];
 
-      const pay = Math.min(300000, remaining);
+  if(mandatory){
 
-      allocationMap[inv.id] = pay;
+    const pay =
+      Math.min(mandatory, remaining);
 
-      remaining -= pay;
+    allocationMap[inv.id] = pay;
 
-      actions.push(`Mandatory → Sual ₹${(pay/100000).toFixed(2)}L`);
+    remaining -= pay;
 
-    }
+    actions.push(
+      `Mandatory → ${inv.name}
+       ₹ ${(pay/100000).toFixed(2)}L`
+    );
 
-    if(inv.name === "Bappon BIL"){
+  }
 
-      const pay = Math.min(200000, remaining);
-
-      allocationMap[inv.id] = pay;
-
-      remaining -= pay;
-
-      actions.push(`Mandatory → Bappon BIL ₹${(pay/100000).toFixed(2)}L`);
-
-    }
-
-  });
+});
 
   /* ============================
      2️⃣ CLOSE HIGH IMPACT BANK LOANS
@@ -907,7 +912,10 @@ function autoAllocateCapital(){
       return;
     }
 
-    if(remaining >= loan.principal){
+    if(remaining - loan.principal < MIN_BUFFER){
+  return;
+}
+{
 
       allocationMap[loan.id] = loan.principal;
 

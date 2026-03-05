@@ -1676,7 +1676,7 @@ function generateScenarioCombinations(){
 
 function runScenarioEngine(){
 
-strategyStore = scenarios;
+
   const mandatoryUsed =
   Object.values(mandatoryPayments)
     .reduce((a,b)=>a+b,0);
@@ -1686,6 +1686,8 @@ const strategyCapital =
 
   const scenarios =
     generateScenarioCombinations();
+
+    strategyStore = scenarios;
 
   const results = [];
 

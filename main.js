@@ -550,7 +550,7 @@ if (effectiveAllocation > 0) {
 
 }
 
-  savedByPrincipal += (originalInterest - adjustedInterest);
+ 
 
   newPrivateInterest += adjustedInterest;
 

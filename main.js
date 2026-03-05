@@ -1774,8 +1774,11 @@ ${sim.months.map(m => `
 </table>
 
 `;
-window.inspectStrategy = inspectStrategy;
+
 }
+
+// expose function globally so HTML onclick works
+window.inspectStrategy = inspectStrategy;
 
 
 function renderScenarioResults(data){

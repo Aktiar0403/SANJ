@@ -1788,6 +1788,26 @@ ${extraInjection > 0
   : "No additional injection required"
 }
 </p>
+<div class="chart-grid">
+
+  <div class="chart-card">
+    <h3>Cash Balance</h3>
+    <canvas id="cashChart"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Investor Interest</h3>
+    <canvas id="interestChart"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Bank EMI</h3>
+    <canvas id="emiChart"></canvas>
+  </div>
+
+</div>
+
+
 <h3>36 Month Timeline</h3>
 
 <table class="sim-table">
@@ -1824,11 +1844,100 @@ ${sim.months.map(m => `
 
 
 `;
-
+renderStrategyCharts(sim);
 }
 
 // expose function globally so HTML onclick works
 window.inspectStrategy = inspectStrategy;
+
+
+function renderStrategyCharts(sim){
+
+  const months =
+    sim.months.map(m => m.month);
+
+  const cash =
+    sim.months.map(m => m.cash/100000);
+
+  const interest =
+    sim.months.map(m => m.investorInterest/100000);
+
+  const emi =
+    sim.months.map(m => m.loanEMI/100000);
+
+  /* CASH CURVE */
+
+  new Chart(
+    document.getElementById("cashChart"),
+    {
+      type:"line",
+      data:{
+        labels:months,
+        datasets:[{
+          label:"Cash (L)",
+          data:cash,
+          borderColor:"#22c55e",
+          backgroundColor:"rgba(34,197,94,0.2)",
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true,
+        plugins:{legend:{display:false}}
+      }
+    }
+  );
+
+  /* INVESTOR INTEREST */
+
+  new Chart(
+    document.getElementById("interestChart"),
+    {
+      type:"line",
+      data:{
+        labels:months,
+        datasets:[{
+          label:"Interest (L)",
+          data:interest,
+          borderColor:"#facc15",
+          backgroundColor:"rgba(250,204,21,0.2)",
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true,
+        plugins:{legend:{display:false}}
+      }
+    }
+  );
+
+  /* EMI CURVE */
+
+  new Chart(
+    document.getElementById("emiChart"),
+    {
+      type:"line",
+      data:{
+        labels:months,
+        datasets:[{
+          label:"EMI (L)",
+          data:emi,
+          borderColor:"#f87171",
+          backgroundColor:"rgba(248,113,113,0.2)",
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true,
+        plugins:{legend:{display:false}}
+      }
+    }
+  );
+
+}
+
+
+
 
 
 function renderScenarioResults(data){

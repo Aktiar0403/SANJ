@@ -1550,32 +1550,70 @@ function simulateScenario(config){
 
 }
 
+function generateScenarioCombinations(){
 
-function generateScenarios(){
+  const scenarios = [];
 
-  return [
+  const investors =
+    baseInvestors.filter(i =>
+      !["Munna","Bappon"].includes(i.name)
+    );
 
-    {
-      name: "Baseline",
-      allocation: {},
-      negotiation: {}
-    },
+  const loans =
+    [...personalLoans, ...businessLoans];
 
-    {
-      name: "Skip Sultan 12M",
-      negotiation: {
-        sultan: { skip: 12 }
-      }
-    },
+  const skipOptions = [0, 6, 12];
 
-    {
-      name: "Close Lendingkart",
+  investors.forEach(inv => {
+
+    skipOptions.forEach(skip => {
+
+      if(skip === 0) return;
+
+      scenarios.push({
+        name: `Skip ${inv.name} ${skip}M`,
+        negotiation: {
+          [inv.id]: { skip }
+        },
+        allocation: {}
+      });
+
+    });
+
+  });
+
+  loans.forEach(l => {
+
+    scenarios.push({
+      name: `Close ${l.name}`,
       allocation: {
-        lendingkart: 1100000
-      }
-    }
+        [l.id]: l.principal
+      },
+      negotiation: {}
+    });
 
-  ];
+  });
+
+  investors.forEach(inv => {
+
+    loans.forEach(l => {
+
+      scenarios.push({
+        name:
+          `Close ${l.name} + Skip ${inv.name}`,
+        allocation: {
+          [l.id]: l.principal
+        },
+        negotiation: {
+          [inv.id]: { skip: 12 }
+        }
+      });
+
+    });
+
+  });
+
+  return scenarios;
 
 }
 
@@ -1583,24 +1621,28 @@ function generateScenarios(){
 function runScenarioEngine(){
 
   const scenarios =
-    generateScenarios();
+    generateScenarioCombinations();
 
-  const results =
-    scenarios.map(s => {
+  const results = [];
 
-      const sim =
-        simulateScenario(s);
+  scenarios.forEach(s => {
 
-      return {
-        name: s.name,
-        riskMonth: sim.riskMonth,
-        finalCash:
-          sim.months[35].cash
-      };
+    const sim =
+      simulateScenario(s);
 
+    results.push({
+      name: s.name,
+      riskMonth: sim.riskMonth,
+      finalCash: sim.months[35].cash
     });
 
-  renderScenarioResults(results);
+  });
+
+  results.sort((a,b) =>
+    b.finalCash - a.finalCash
+  );
+
+  renderScenarioResults(results.slice(0,20));
 
 }
 
@@ -1613,19 +1655,21 @@ function renderScenarioResults(data){
 
   el.innerHTML = `
 
-  <h3>Scenario Comparison</h3>
+  <h3>Top Strategies</h3>
 
   <table class="sim-table">
 
   <tr>
+  <th>Rank</th>
   <th>Scenario</th>
   <th>Risk Month</th>
   <th>Final Cash</th>
   </tr>
 
-  ${data.map(d=>`
+  ${data.map((d,i)=>`
 
     <tr>
+      <td>${i+1}</td>
       <td>${d.name}</td>
       <td>${d.riskMonth || "Stable"}</td>
       <td>${toL(d.finalCash)} L</td>
@@ -1638,7 +1682,6 @@ function renderScenarioResults(data){
   `;
 
 }
-
 
 
 /* ==========================================

@@ -1712,7 +1712,22 @@ scenarioResults = results;
   renderScenarioResults(results.slice(0,20));
 
 }
+function resolveName(id){
 
+  const inv =
+    baseInvestors.find(i => i.id === id);
+
+  if(inv) return inv.name;
+
+  const loan =
+    [...personalLoans, ...businessLoans]
+    .find(l => l.id === id);
+
+  if(loan) return loan.name;
+
+  return id;
+
+}
 
 function inspectStrategy(index){
 
@@ -1731,7 +1746,7 @@ function inspectStrategy(index){
   .forEach(([k,v])=>{
 
     allocationHTML +=
-      `<li>${k} → ${toL(v)} L</li>`;
+      `<li>${resolveName(k)} → ${toL(v)} L</li>`;
 
   });
 
@@ -1739,7 +1754,7 @@ function inspectStrategy(index){
   .forEach(([k,v])=>{
 
     negotiationHTML +=
-      `<li>${k} skip ${v.skip} months</li>`;
+      `<li>${resolveName(k)} skip ${v.skip} months</li>`;
 
   });
 

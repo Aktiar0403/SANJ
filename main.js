@@ -11,6 +11,7 @@ let negotiationMap = {};
 let baseInvestors = [];
 let allocationMap = {};
 let confirmedInjection = 0;
+let strategyStore = [];
 
 let personalLoans = [
   {
@@ -1675,7 +1676,7 @@ function generateScenarioCombinations(){
 
 function runScenarioEngine(){
 
-
+strategyStore = scenarios;
   const mandatoryUsed =
   Object.values(mandatoryPayments)
     .reduce((a,b)=>a+b,0);
@@ -1709,6 +1710,75 @@ const strategyCapital =
 
 }
 
+
+function inspectStrategy(index){
+
+  const strategy = strategyStore[index];
+
+  const sim = simulateScenario(strategy);
+
+  const el =
+    document.getElementById("results");
+
+  let allocationHTML = "";
+
+  Object.entries(strategy.allocation || {})
+  .forEach(([k,v])=>{
+
+    allocationHTML +=
+      `<li>${k} → ₹ ${(v/100000).toFixed(2)} L</li>`;
+
+  });
+
+  let negotiationHTML = "";
+
+  Object.entries(strategy.negotiation || {})
+  .forEach(([k,v])=>{
+
+    negotiationHTML +=
+      `<li>${k} skip ${v.skip} months</li>`;
+
+  });
+
+  el.innerHTML = `
+
+  <h2>${strategy.name}</h2>
+
+  <h3>Initial Allocation</h3>
+  <ul>${allocationHTML}</ul>
+
+  <h3>Negotiations</h3>
+  <ul>${negotiationHTML}</ul>
+
+  <h3>36 Month Timeline</h3>
+
+  <table class="sim-table">
+
+  <tr>
+  <th>Month</th>
+  <th>Cash</th>
+  <th>Net</th>
+  <th>Investor Interest</th>
+  <th>Loan EMI</th>
+  </tr>
+
+  ${sim.months.map(m=>`
+
+    <tr>
+      <td>${m.month}</td>
+      <td>${toL(m.cash)} L</td>
+      <td>${toL(m.net)} L</td>
+      <td>${toL(m.investorInterest || 0)} L</td>
+      <td>${toL(m.loanEMI || 0)} L</td>
+    </tr>
+
+  `).join("")}
+
+  </table>
+
+  `;
+
+}
 
 
 function renderScenarioResults(data){

@@ -1544,11 +1544,18 @@ function simulateScenario(config){
 
     cash += net;
 
-    months.push({
-      month: m,
-      cash,
-      net
-    });
+  months.push({
+  month: m,
+  cash,
+  net,
+  operating,
+  investorInterest,
+  loanEMI,
+  gfCost,
+  revenue,
+  doctor,
+  cogs
+});
 
   }
 
@@ -1736,6 +1743,12 @@ function inspectStrategy(index){
   const strategy = data.strategy;
   const sim = data.simulation;
 
+  const minCash =
+  Math.min(...sim.months.map(m => m.cash));
+
+const extraInjection =
+  minCash < 0 ? Math.abs(minCash) : 0;
+
   const el =
     document.getElementById("results");
 
@@ -1767,26 +1780,48 @@ function inspectStrategy(index){
 
 <h3>Negotiations</h3>
 <ul>${negotiationHTML}</ul>
+<h3>Additional Injection Required</h3>
 
+<p>
+${extraInjection > 0
+  ? `${toL(extraInjection)} L required to avoid negative cash`
+  : "No additional injection required"
+}
+</p>
 <h3>36 Month Timeline</h3>
 
 <table class="sim-table">
 
 <tr>
 <th>Month</th>
-<th>Cash</th>
+<th>Revenue</th>
+<th>Doctor</th>
+<th>COGS</th>
+<th>Operating</th>
+<th>Investor Interest</th>
+<th>Loan EMI</th>
+<th>Godfather</th>
 <th>Net</th>
+<th>Cash</th>
 </tr>
 
 ${sim.months.map(m => `
 <tr>
 <td>${m.month}</td>
-<td>${toL(m.cash)} L</td>
+<td>${toL(m.revenue)} L</td>
+<td>${toL(m.doctor)} L</td>
+<td>${toL(m.cogs)} L</td>
+<td>${toL(m.operating)} L</td>
+<td>${toL(m.investorInterest)} L</td>
+<td>${toL(m.loanEMI)} L</td>
+<td>${toL(m.gfCost)} L</td>
 <td>${toL(m.net)} L</td>
+<td>${toL(m.cash)} L</td>
 </tr>
 `).join("")}
 
 </table>
+
 
 `;
 

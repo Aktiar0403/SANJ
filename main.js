@@ -92,6 +92,195 @@ function toL(value) {
   // Rupees → Lakhs (2 decimal)
   return (Number(value) / 100000).toFixed(2);
 }
+
+
+function runStrategyEngine(){
+
+  const strategies = [
+    strategySurvival(),
+    strategyLoanKill(),
+    strategyRelationship(),
+    strategyNegotiation()
+  ];
+
+  renderStrategyComparison(strategies);
+
+}
+
+function strategySurvival(){
+
+  const alloc = {};
+  const nego = {};
+
+  let remaining = confirmedInjection;
+
+  // mandatory investors
+  alloc["Raju"] = 900000;
+  remaining -= 900000;
+
+  alloc["Sual"] = 300000;
+  remaining -= 300000;
+
+  alloc["Bappon BIL"] = 200000;
+  remaining -= 200000;
+
+  // close highest EMI loans first
+  const loans =
+    [...personalLoans, ...businessLoans]
+    .sort((a,b)=> b.emi - a.emi);
+
+  loans.forEach(l => {
+
+    if(remaining >= l.principal){
+
+      alloc[l.id] = l.principal;
+      remaining -= l.principal;
+
+    }
+
+  });
+
+  return evaluateStrategy(
+    "Survival",
+    alloc,
+    nego
+  );
+
+}
+
+function strategyLoanKill(){
+
+  const alloc = {};
+  const nego = {};
+
+  let remaining = confirmedInjection;
+
+  const loans =
+    [...personalLoans, ...businessLoans]
+    .sort((a,b)=> b.tenureRemaining - a.tenureRemaining);
+
+  loans.forEach(l => {
+
+    if(remaining >= l.principal){
+
+      alloc[l.id] = l.principal;
+      remaining -= l.principal;
+
+    }
+
+  });
+
+  return evaluateStrategy(
+    "Loan Kill",
+    alloc,
+    nego
+  );
+
+}
+
+
+function strategyRelationship(){
+
+  const alloc = {};
+  const nego = {};
+
+  let remaining = confirmedInjection;
+
+  baseInvestors.forEach(inv => {
+
+    const partial =
+      Math.min(
+        inv.principal * 0.15,
+        remaining
+      );
+
+    alloc[inv.id] = partial;
+
+    remaining -= partial;
+
+  });
+
+  return evaluateStrategy(
+    "Relationship",
+    alloc,
+    nego
+  );
+
+}
+
+function strategyNegotiation(){
+
+  const alloc = {};
+  const nego = {};
+
+  baseInvestors.forEach(inv => {
+
+    if(inv.name === "Munna" ||
+       inv.name === "Bappon")
+       return;
+
+    nego[inv.id] = {
+      skip: 2
+    };
+
+  });
+
+  return evaluateStrategy(
+    "Negotiation",
+    alloc,
+    nego
+  );
+
+}
+
+function evaluateStrategy(name, alloc, nego){
+
+  const savedAlloc = allocationMap;
+  const savedNego = negotiationMap;
+
+  allocationMap = alloc;
+  negotiationMap = nego;
+
+  const result = calculateOutcome();
+
+  allocationMap = savedAlloc;
+  negotiationMap = savedNego;
+
+  return {
+    name,
+    result
+  };
+
+}
+
+
+function renderStrategyComparison(strategies){
+
+  const container =
+    document.getElementById("results");
+
+  container.innerHTML = `
+  <h3>Strategy Comparison</h3>
+
+  <table class="sim-table">
+  <tr>
+    <th>Strategy</th>
+    <th>Net Monthly</th>
+    <th>Runway</th>
+  </tr>
+
+  ${strategies.map(s => `
+    <tr>
+      <td>${s.name}</td>
+      <td>${toL(s.result.netMonthly)} L</td>
+      <td>${s.result.runway}</td>
+    </tr>
+  `).join("")}
+
+  </table>
+  `;
+
+}
 /* ==============================
    PRIVATE UI
 ============================== */
@@ -1372,4 +1561,11 @@ document
   .addEventListener(
     "click",
     runSurvivalSimulation
+  );
+
+  document
+  .getElementById("runStrategies")
+  .addEventListener(
+    "click",
+    runStrategyEngine
   );

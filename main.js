@@ -13,15 +13,51 @@ let allocationMap = {};
 let confirmedInjection = 0;
 
 let personalLoans = [
-  { id: "hdfc", name: "HDFC Block", emi: 46000, principal: 600000 },
-  { id: "bajajHero", name: "Bajaj + Hero", emi: 30000, principal: 600000 },
-  { id: "financeCorp", name: "FinanceCorp", emi: 19000, principal: 600000 }
+  {
+    id: "hdfc",
+    name: "HDFC Block",
+    emi: 46000,
+    principal: 600000,
+    tenureRemaining: 8
+  },
+  {
+    id: "hero",
+    name: "Hero Fincorp",
+    emi: 19000,
+    principal: 600000,
+    tenureRemaining: 24
+  },
+  {
+    id: "bajajHero",
+    name: "Bajaj Finance",
+    emi: 30000,
+    principal: 600000,
+    tenureRemaining: 24
+  }
 ];
 
 let businessLoans = [
-  { id: "lendingkart", name: "Lendingkart", emi: 88000, principal: 1100000 },
-  { id: "hdfcBusiness", name: "HDFC Business", emi: 72000, principal: 1600000 },
-  { id: "bajajBusiness", name: "Bajaj Business", emi: 42000, principal: 1100000 }
+  {
+    id: "lendingkart",
+    name: "Lendingkart",
+    emi: 88000,
+    principal: 1100000,
+    tenureRemaining: 12
+  },
+  {
+    id: "hdfcBusiness",
+    name: "HDFC Business",
+    emi: 72000,
+    principal: 1600000,
+    tenureRemaining: 24
+  },
+  {
+    id: "bajajBusiness",
+    name: "Bajaj Business",
+    emi: 42000,
+    principal: 1100000,
+    tenureRemaining: 36
+  }
 ];
 
 /* ==============================
@@ -833,16 +869,6 @@ console.log({
 
 function autoAllocateCapital(){
 
-const MIN_BUFFER = 1500000;
-
-const mandatoryInvestors = {
-  "Raju": 900000,
-  "Munna Sister": 400000,
-  "Sual": 300000,
-  "Bappon BIL": 200000
-};
-
-
   if(confirmedInjection <= 0){
     alert("Confirm injection first");
     return;
@@ -853,38 +879,57 @@ const mandatoryInvestors = {
 
   let remaining = confirmedInjection;
 
+  const MIN_BUFFER = 1500000;
+
   let actions = [];
 
-  /* ============================
-     1️⃣ MANDATORY INVESTOR PAYMENTS
-  ============================ */
+  /* =========================
+     MANDATORY INVESTORS
+  ========================= */
+
+  const mandatory = {
+    "Raju": 900000,
+    "Munna Sister": 400000,
+    "Sual": 300000,
+    "Bappon BIL": 200000
+  };
 
   baseInvestors.forEach(inv => {
 
-  const mandatory =
-    mandatoryInvestors[inv.name];
+    const req = mandatory[inv.name];
 
-  if(mandatory){
+    if(req){
 
-    const pay =
-      Math.min(mandatory, remaining);
+      const pay = Math.min(req, remaining);
 
-    allocationMap[inv.id] = pay;
+      allocationMap[inv.id] = pay;
 
-    remaining -= pay;
+      remaining -= pay;
 
-    actions.push(
-      `Mandatory → ${inv.name}
-       ₹ ${(pay/100000).toFixed(2)}L`
-    );
+      actions.push(
+        `Mandatory → ${inv.name} ₹${(pay/100000).toFixed(2)}L`
+      );
 
+    }
+
+  });
+
+  /* =========================
+     RESERVE BUSINESS BUFFER
+  ========================= */
+
+  if(remaining < MIN_BUFFER){
+    alert("Injection too small after mandatory payments");
+    return;
   }
 
-});
+  actions.push(
+   `Reserved Operational Buffer → 15L`
+  );
 
-  /* ============================
-     2️⃣ CLOSE HIGH IMPACT BANK LOANS
-  ============================ */
+  /* =========================
+     LOAN PRIORITY CALCULATION
+  ========================= */
 
   const allLoans = [
     ...personalLoans,
@@ -894,7 +939,7 @@ const mandatoryInvestors = {
   allLoans.forEach(loan => {
 
     loan.futureBurden =
-      loan.emi * (loan.tenureRemaining || 12);
+      loan.emi * loan.tenureRemaining;
 
     loan.score =
       loan.futureBurden / loan.principal;
@@ -903,42 +948,51 @@ const mandatoryInvestors = {
 
   allLoans.sort((a,b)=> b.score - a.score);
 
+  /* =========================
+     CLOSE HIGH IMPACT LOANS
+  ========================= */
+
   allLoans.forEach(loan => {
 
-    if(remaining <= 0) return;
+    if(remaining <= MIN_BUFFER) return;
 
-    if(loan.tenureRemaining && loan.tenureRemaining <= 9){
-      actions.push(`Skipped ${loan.name} (short tenure)`);
+    if(loan.tenureRemaining <= 9){
+
+      actions.push(
+        `Skipped ${loan.name}
+         (${loan.tenureRemaining} months left)`
+      );
+
       return;
     }
 
-    if(remaining - loan.principal < MIN_BUFFER){
-  return;
-}
-{
+    if(remaining - loan.principal < MIN_BUFFER)
+      return;
 
-      allocationMap[loan.id] = loan.principal;
+    allocationMap[loan.id] = loan.principal;
 
-      remaining -= loan.principal;
+    remaining -= loan.principal;
 
-      actions.push(`Closed Loan → ${loan.name}`);
-
-    }
+    actions.push(
+      `Closed Loan → ${loan.name}
+       (${loan.tenureRemaining} months left)`
+    );
 
   });
 
-  /* ============================
-     3️⃣ TOUCH MULTIPLE INVESTORS
-  ============================ */
+  /* =========================
+     TOUCH MULTIPLE INVESTORS
+  ========================= */
 
   baseInvestors.forEach(inv => {
 
-    if(remaining <= 0) return;
+    if(remaining <= MIN_BUFFER) return;
 
     if(allocationMap[inv.id]) return;
 
     const partial =
-      Math.min(inv.principal * 0.15, remaining);
+      Math.min(inv.principal * 0.15,
+               remaining - MIN_BUFFER);
 
     if(partial <= 0) return;
 
@@ -952,9 +1006,9 @@ const mandatoryInvestors = {
 
   });
 
-  /* ============================
-     4️⃣ OPTIONAL INTEREST SKIP
-  ============================ */
+  /* =========================
+     OPTIONAL INTEREST SKIP
+  ========================= */
 
   baseInvestors.forEach(inv => {
 
@@ -965,7 +1019,7 @@ const mandatoryInvestors = {
       };
 
       actions.push(
-        `Interest Skip → ${inv.name} (2 months)`
+       `Interest Skip → ${inv.name} (2 months)`
       );
 
     }
@@ -974,18 +1028,49 @@ const mandatoryInvestors = {
 
   updateStickyBar();
 
- document.getElementById("results").innerHTML = `
-<h3>Auto Strategy Decisions</h3>
+  /* =========================
+     SHOW RESULT IN UI
+  ========================= */
 
-<ul>
-${actions.map(a => `<li>${a}</li>`).join("")}
-</ul>
+  document.getElementById("results").innerHTML = `
 
-<p>Now click <strong>Calculate Outcome</strong> to see impact.</p>
-`;
- console.log("Auto Strategy", actions);
+  <h3>Auto Allocation Strategy</h3>
 
-  alert("Auto allocation completed");
+  <div class="summary-block">
+
+  <p><strong>Injection:</strong>
+  ₹ ${(confirmedInjection/100000).toFixed(2)} L</p>
+
+  <p><strong>Mandatory Investors:</strong>
+  Raju 9L, Munna Sister 4L, Sual 3L, Bappon 2L</p>
+
+  <p><strong>Operational Buffer:</strong>
+  ₹ 15L reserved</p>
+
+  <p><strong>Remaining Available:</strong>
+  ₹ ${(remaining/100000).toFixed(2)} L</p>
+
+  </div>
+
+  <h4>Bank Loans Status</h4>
+
+  <ul>
+  ${allLoans.map(l =>
+   `<li>${l.name}
+    → EMI ${(l.emi/100000).toFixed(2)}L
+    | Months Left ${l.tenureRemaining}</li>`
+   ).join("")}
+  </ul>
+
+  <h4>Strategy Actions</h4>
+
+  <ul>
+  ${actions.map(a => `<li>${a}</li>`).join("")}
+  </ul>
+
+  <p>Now click <strong>Calculate Outcome</strong>.</p>
+
+  `;
 
 }
 

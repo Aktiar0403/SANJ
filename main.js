@@ -1774,7 +1774,7 @@ ${sim.months.map(m => `
 </table>
 
 `;
-
+window.inspectStrategy = inspectStrategy;
 }
 
 

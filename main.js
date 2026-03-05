@@ -106,6 +106,17 @@ function runStrategyEngine(){
   renderStrategyComparison(strategies);
 
 }
+const mandatoryPayments = {
+  raju: 900000,
+  munnaSister: 400000,
+  sual: 300000,
+  bapponBil: 200000,
+  amit: 500000,
+  raushan: 500000
+};
+
+
+
 
 function strategySurvival(){
 
@@ -1552,12 +1563,23 @@ function simulateScenario(config){
 
 function generateScenarioCombinations(){
 
+
+const lockedInvestors = [
+ "Raju",
+ "Munna Sister",
+ "Sual",
+ "Bappon BIL",
+ "Amit",
+ "Raushan"
+];
+
+const investors =
+  baseInvestors.filter(i =>
+    !lockedInvestors.includes(i.name)
+  );
+
   const scenarios = [];
 
-  const investors =
-    baseInvestors.filter(i =>
-      !["Munna","Bappon"].includes(i.name)
-    );
 
   const loans =
     [...personalLoans, ...businessLoans];
@@ -1619,6 +1641,14 @@ function generateScenarioCombinations(){
 
 
 function runScenarioEngine(){
+
+
+  const mandatoryUsed =
+  Object.values(mandatoryPayments)
+    .reduce((a,b)=>a+b,0);
+
+const strategyCapital =
+  confirmedInjection - mandatoryUsed;
 
   const scenarios =
     generateScenarioCombinations();

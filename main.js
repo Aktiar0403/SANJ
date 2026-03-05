@@ -1366,3 +1366,10 @@ document.getElementById("modalAddBtn")
     closeModal();
 
 });
+
+document
+  .getElementById("runSim")
+  .addEventListener(
+    "click",
+    runSurvivalSimulation
+  );

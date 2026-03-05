@@ -974,7 +974,16 @@ const mandatoryInvestors = {
 
   updateStickyBar();
 
-  console.log("Auto Strategy", actions);
+ document.getElementById("results").innerHTML = `
+<h3>Auto Strategy Decisions</h3>
+
+<ul>
+${actions.map(a => `<li>${a}</li>`).join("")}
+</ul>
+
+<p>Now click <strong>Calculate Outcome</strong> to see impact.</p>
+`;
+ console.log("Auto Strategy", actions);
 
   alert("Auto allocation completed");
 

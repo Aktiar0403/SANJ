@@ -1563,9 +1563,16 @@ document
     runSurvivalSimulation
   );
 
-  document
-  .getElementById("runStrategies")
-  .addEventListener(
-    "click",
-    runStrategyEngine
-  );
+document.addEventListener("DOMContentLoaded", () => {
+
+  const btn =
+    document.getElementById("runStrategies");
+
+  if(btn){
+    btn.addEventListener(
+      "click",
+      runStrategyEngine
+    );
+  }
+
+});

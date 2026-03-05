@@ -1061,6 +1061,9 @@ return {
 };
 
 }
+
+
+
 function runSurvivalSimulation(){
 
   const months = 36;
@@ -1443,7 +1446,198 @@ function autoAllocateCapital(){
 
 }
 
+/* ==========================================
+   SCENARIO ENGINE
+========================================== */
 
+
+function simulateScenario(config){
+
+  let investors =
+    JSON.parse(JSON.stringify(baseInvestors));
+
+  let pLoans =
+    JSON.parse(JSON.stringify(personalLoans));
+
+  let bLoans =
+    JSON.parse(JSON.stringify(businessLoans));
+
+  let cash =
+    confirmedInjection -
+    Object.values(config.allocation || {})
+      .reduce((a,b)=>a+b,0);
+
+  let months = [];
+
+  for(let m=1; m<=36; m++){
+
+    let investorInterest = 0;
+
+    investors.forEach(inv => {
+
+      const nego =
+        config.negotiation?.[inv.id];
+
+      if(nego?.skip >= m) return;
+
+      investorInterest += inv.monthlyInterest;
+
+    });
+
+    let loanEMI = 0;
+
+    pLoans.forEach(l => {
+
+      if(l.tenureRemaining > 0){
+        loanEMI += l.emi;
+        l.tenureRemaining--;
+      }
+
+    });
+
+    bLoans.forEach(l => {
+
+      if(l.tenureRemaining > 0){
+        loanEMI += l.emi;
+        l.tenureRemaining--;
+      }
+
+    });
+
+    const revenue =
+      L(Number(document.getElementById("revenue").value));
+
+    const fixed =
+      L(Number(document.getElementById("fixedExpense").value));
+
+    const doctor =
+      revenue *
+      Number(document.getElementById("doctorPercent").value)/100;
+
+    const cogs =
+      revenue *
+      Number(document.getElementById("cogsPercent").value)/100;
+
+    const operating =
+      revenue - doctor - cogs - fixed;
+
+    const gfCost =
+      confirmedInjection * 0.01;
+
+    const net =
+      operating -
+      investorInterest -
+      loanEMI -
+      gfCost;
+
+    cash += net;
+
+    months.push({
+      month: m,
+      cash,
+      net
+    });
+
+  }
+
+  const riskMonth =
+    months.find(m => m.cash < 0)?.month || null;
+
+  return {
+    months,
+    riskMonth
+  };
+
+}
+
+
+function generateScenarios(){
+
+  return [
+
+    {
+      name: "Baseline",
+      allocation: {},
+      negotiation: {}
+    },
+
+    {
+      name: "Skip Sultan 12M",
+      negotiation: {
+        sultan: { skip: 12 }
+      }
+    },
+
+    {
+      name: "Close Lendingkart",
+      allocation: {
+        lendingkart: 1100000
+      }
+    }
+
+  ];
+
+}
+
+
+function runScenarioEngine(){
+
+  const scenarios =
+    generateScenarios();
+
+  const results =
+    scenarios.map(s => {
+
+      const sim =
+        simulateScenario(s);
+
+      return {
+        name: s.name,
+        riskMonth: sim.riskMonth,
+        finalCash:
+          sim.months[35].cash
+      };
+
+    });
+
+  renderScenarioResults(results);
+
+}
+
+
+
+function renderScenarioResults(data){
+
+  const el =
+    document.getElementById("results");
+
+  el.innerHTML = `
+
+  <h3>Scenario Comparison</h3>
+
+  <table class="sim-table">
+
+  <tr>
+  <th>Scenario</th>
+  <th>Risk Month</th>
+  <th>Final Cash</th>
+  </tr>
+
+  ${data.map(d=>`
+
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.riskMonth || "Stable"}</td>
+      <td>${toL(d.finalCash)} L</td>
+    </tr>
+
+  `).join("")}
+
+  </table>
+
+  `;
+
+}
 
 
 
@@ -1584,3 +1778,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
+const scenarioBtn =
+ document.getElementById("runScenario");
+
+if(scenarioBtn){
+ scenarioBtn.addEventListener(
+  "click",
+  runScenarioEngine
+ );
+}

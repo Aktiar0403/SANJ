@@ -12,7 +12,7 @@ let baseInvestors = [];
 let allocationMap = {};
 let confirmedInjection = 0;
 let strategyStore = [];
-
+let scenarioResults = [];
 let personalLoans = [
   {
     id: "hdfc",
@@ -1696,18 +1696,19 @@ const strategyCapital =
     const sim =
       simulateScenario(s);
 
-    results.push({
-      name: s.name,
-      riskMonth: sim.riskMonth,
-      finalCash: sim.months[35].cash
-    });
-
+   results.push({
+  name: s.name,
+  riskMonth: sim.riskMonth,
+  finalCash: sim.months[35].cash,
+  strategy: s,
+  simulation: sim
+});
   });
 
   results.sort((a,b) =>
     b.finalCash - a.finalCash
   );
-
+scenarioResults = results;
   renderScenarioResults(results.slice(0,20));
 
 }
@@ -1715,24 +1716,24 @@ const strategyCapital =
 
 function inspectStrategy(index){
 
-  const strategy = strategyStore[index];
+  const data = scenarioResults[index];
 
-  const sim = simulateScenario(strategy);
+  const strategy = data.strategy;
+  const sim = data.simulation;
 
   const el =
     document.getElementById("results");
 
   let allocationHTML = "";
+  let negotiationHTML = "";
 
   Object.entries(strategy.allocation || {})
   .forEach(([k,v])=>{
 
     allocationHTML +=
-      `<li>${k} → ₹ ${(v/100000).toFixed(2)} L</li>`;
+      `<li>${k} → ${toL(v)} L</li>`;
 
   });
-
-  let negotiationHTML = "";
 
   Object.entries(strategy.negotiation || {})
   .forEach(([k,v])=>{
@@ -1744,41 +1745,35 @@ function inspectStrategy(index){
 
   el.innerHTML = `
 
-  <h2>${strategy.name}</h2>
+<h2>${data.name}</h2>
 
-  <h3>Initial Allocation</h3>
-  <ul>${allocationHTML}</ul>
+<h3>Initial Allocation</h3>
+<ul>${allocationHTML}</ul>
 
-  <h3>Negotiations</h3>
-  <ul>${negotiationHTML}</ul>
+<h3>Negotiations</h3>
+<ul>${negotiationHTML}</ul>
 
-  <h3>36 Month Timeline</h3>
+<h3>36 Month Timeline</h3>
 
-  <table class="sim-table">
+<table class="sim-table">
 
-  <tr>
-  <th>Month</th>
-  <th>Cash</th>
-  <th>Net</th>
-  <th>Investor Interest</th>
-  <th>Loan EMI</th>
-  </tr>
+<tr>
+<th>Month</th>
+<th>Cash</th>
+<th>Net</th>
+</tr>
 
-  ${sim.months.map(m=>`
+${sim.months.map(m => `
+<tr>
+<td>${m.month}</td>
+<td>${toL(m.cash)} L</td>
+<td>${toL(m.net)} L</td>
+</tr>
+`).join("")}
 
-    <tr>
-      <td>${m.month}</td>
-      <td>${toL(m.cash)} L</td>
-      <td>${toL(m.net)} L</td>
-      <td>${toL(m.investorInterest || 0)} L</td>
-      <td>${toL(m.loanEMI || 0)} L</td>
-    </tr>
+</table>
 
-  `).join("")}
-
-  </table>
-
-  `;
+`;
 
 }
 
@@ -1790,7 +1785,7 @@ function renderScenarioResults(data){
 
   el.innerHTML = `
 
-  <h3>Top Strategies</h3>
+  <h3>Top Strategies (Click to Inspect)</h3>
 
   <table class="sim-table">
 
@@ -1803,7 +1798,7 @@ function renderScenarioResults(data){
 
   ${data.map((d,i)=>`
 
-    <tr>
+    <tr onclick="inspectStrategy(${i})" style="cursor:pointer;">
       <td>${i+1}</td>
       <td>${d.name}</td>
       <td>${d.riskMonth || "Stable"}</td>

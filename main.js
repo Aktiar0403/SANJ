@@ -864,6 +864,180 @@ console.log({
   netMonthly
 });
 }
+function runSurvivalSimulation(){
+
+  const months = 36;
+
+  let cash =
+    confirmedInjection -
+    Object.values(allocationMap)
+      .reduce((a,b)=>a+b,0);
+
+  const simulation = [];
+
+  let investors =
+    JSON.parse(JSON.stringify(baseInvestors));
+
+  let pLoans =
+    JSON.parse(JSON.stringify(personalLoans));
+
+  let bLoans =
+    JSON.parse(JSON.stringify(businessLoans));
+
+  for(let m = 1; m <= months; m++){
+
+    /* ======================
+       OPERATING SURPLUS
+    ====================== */
+
+    const revenue =
+      L(Number(document.getElementById("revenue").value));
+
+    const fixed =
+      L(Number(document.getElementById("fixedExpense").value));
+
+    const doctorPercent =
+      Number(document.getElementById("doctorPercent").value);
+
+    const cogsPercent =
+      Number(document.getElementById("cogsPercent").value);
+
+    const doctorCost =
+      revenue * doctorPercent / 100;
+
+    const cogs =
+      revenue * cogsPercent / 100;
+
+    const operating =
+      revenue - doctorCost - cogs - fixed;
+
+    /* ======================
+       INVESTOR INTEREST
+    ====================== */
+
+    let investorInterest = 0;
+
+    investors.forEach(inv => {
+
+      investorInterest += inv.monthlyInterest;
+
+    });
+
+    /* ======================
+       LOAN EMI
+    ====================== */
+
+    let loanEMI = 0;
+
+    pLoans.forEach(l => {
+
+      if(l.tenureRemaining > 0){
+
+        loanEMI += l.emi;
+
+        l.tenureRemaining--;
+
+      }
+
+    });
+
+    bLoans.forEach(l => {
+
+      if(l.tenureRemaining > 0){
+
+        loanEMI += l.emi;
+
+        l.tenureRemaining--;
+
+      }
+
+    });
+
+    /* ======================
+       GODFATHER COST
+    ====================== */
+
+    const gfCost =
+      confirmedInjection * 0.01;
+
+    /* ======================
+       NET MONTHLY
+    ====================== */
+
+    const net =
+      operating -
+      investorInterest -
+      loanEMI -
+      gfCost;
+
+    cash += net;
+
+    /* ======================
+       SAVE MONTH DATA
+    ====================== */
+
+    simulation.push({
+      month: m,
+      cash,
+      net,
+      investorInterest,
+      loanEMI
+    });
+
+  }
+
+  renderSimulation(simulation);
+
+}
+
+function renderSimulation(data){
+
+  const results =
+    document.getElementById("results");
+
+  let riskMonth = null;
+
+  data.forEach(d => {
+
+    if(d.cash < 0 && !riskMonth){
+      riskMonth = d.month;
+    }
+
+  });
+
+  results.innerHTML += `
+
+  <h3>36 Month Survival Simulation</h3>
+
+  <p><strong>Risk Month:</strong>
+  ${riskMonth || "None (Stable)"}</p>
+
+  <table class="sim-table">
+
+  <tr>
+    <th>Month</th>
+    <th>Cash Balance</th>
+    <th>Investor Interest</th>
+    <th>Loan EMI</th>
+    <th>Net</th>
+  </tr>
+
+  ${data.map(d => `
+    <tr>
+      <td>${d.month}</td>
+      <td>${toL(d.cash)} L</td>
+      <td>${toL(d.investorInterest)} L</td>
+      <td>${toL(d.loanEMI)} L</td>
+      <td>${toL(d.net)} L</td>
+    </tr>
+  `).join("")}
+
+  </table>
+  `;
+
+}
+
+
 
 function autoAllocateCapital(){
 

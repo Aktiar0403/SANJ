@@ -258,3 +258,113 @@ button {
 .action-block li{
  margin-bottom:6px;
 }
+
+#results{
+  margin-top:30px;
+  padding:20px;
+  background:#0f172a;
+  border-radius:12px;
+  color:#e5e7eb;
+  font-family:system-ui;
+}
+
+#results h2{
+  font-size:26px;
+  margin-bottom:15px;
+  color:#38bdf8;
+}
+
+#results h3{
+  margin-top:25px;
+  margin-bottom:10px;
+  color:#facc15;
+  border-bottom:1px solid #334155;
+  padding-bottom:5px;
+}
+
+#results ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+#results li{
+  padding:6px 10px;
+  margin-bottom:6px;
+  border-radius:6px;
+  background:#1e293b;
+}
+
+.mandatory-list li{
+  background:#7f1d1d;
+  color:#fecaca;
+  font-weight:600;
+}
+
+.negotiation-list li{
+  background:#064e3b;
+  color:#a7f3d0;
+}
+
+.injection-warning{
+  margin-top:15px;
+  padding:12px;
+  border-radius:8px;
+  font-weight:600;
+}
+
+.injection-warning.needed{
+  background:#7f1d1d;
+  color:#fecaca;
+}
+
+.injection-warning.safe{
+  background:#065f46;
+  color:#a7f3d0;
+}
+
+.sim-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  font-size:14px;
+}
+
+.sim-table th{
+  background:#1e293b;
+  color:#facc15;
+  padding:10px;
+  border-bottom:2px solid #334155;
+  text-align:center;
+}
+
+.sim-table td{
+  padding:8px;
+  text-align:center;
+  border-bottom:1px solid #334155;
+}
+
+.sim-table tr:nth-child(even){
+  background:#020617;
+}
+
+.cash-good{
+  color:#22c55e;
+}
+
+.cash-warning{
+  color:#facc15;
+}
+
+.cash-danger{
+  color:#ef4444;
+}
+
+.sim-table tr:hover{
+  background:#1e293b;
+}
+
+.sim-table tr{
+  transition:all 0.15s ease;
+  cursor:pointer;
+}

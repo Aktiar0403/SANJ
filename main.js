@@ -423,31 +423,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 });
 
-function confirmInjection() {
+function confirmInjection(){
 
   const input =
-    Number(document.getElementById("godfatherInput")?.value) || 0;
+    Number(document.getElementById("godfatherInput").value || 0);
 
-  if (input <= 0) {
+  if(input <= 0){
     alert("Enter valid injection amount");
     return;
   }
 
-  confirmedInjection =
-  L(document.getElementById("godfatherInput")?.value || 0);
+  confirmedInjection = L(input);
 
-  // Update sticky immediately
   document.getElementById("gfTotal").innerText =
-    "₹ " + (confirmedInjection/100000).toFixed(2) + " L";
+    "₹ " + toL(confirmedInjection) + " L";
 
   document.getElementById("gfUsed").innerText =
     "₹ 0.00 L";
 
   document.getElementById("gfRemaining").innerText =
-    "₹ " + (confirmedInjection/100000).toFixed(2) + " L";
+    "₹ " + toL(confirmedInjection) + " L";
 
-  alert("Injection Confirmed");
-
+  console.log("Injection L:", input);
+  console.log("Injection ₹:", confirmedInjection);
 }
 /* ==============================
    FULL SURVIVAL CALCULATION

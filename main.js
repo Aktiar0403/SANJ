@@ -1563,82 +1563,115 @@ function simulateScenario(config){
 
 function generateScenarioCombinations(){
 
-
-const lockedInvestors = [
- "Raju",
- "Munna Sister",
- "Sual",
- "Bappon BIL",
- "Amit",
- "Raushan"
-];
-
-const investors =
-  baseInvestors.filter(i =>
-    !lockedInvestors.includes(i.name)
-  );
-
   const scenarios = [];
 
+  const mandatory = {
+    raju: 900000,
+    munnaSister: 400000,
+    sual: 300000,
+    bapponBil: 200000,
+    amit: 500000,
+    raushan: 500000
+  };
+
+  const lockedNames = [
+    "Raju",
+    "Munna Sister",
+    "Sual",
+    "Bappon BIL",
+    "Amit",
+    "Raushan"
+  ];
+
+  const investors =
+    baseInvestors.filter(i =>
+      !lockedNames.includes(i.name)
+    );
 
   const loans =
     [...personalLoans, ...businessLoans];
 
-  const skipOptions = [0, 6, 12];
+  for(let i=0;i<200;i++){
 
-  investors.forEach(inv => {
+    const allocation = {...mandatory};
+    const negotiation = {};
 
-    skipOptions.forEach(skip => {
+    let capitalUsed =
+      Object.values(mandatory)
+      .reduce((a,b)=>a+b,0);
 
-      if(skip === 0) return;
+    const capitalLimit =
+      confirmedInjection;
 
-      scenarios.push({
-        name: `Skip ${inv.name} ${skip}M`,
-        negotiation: {
-          [inv.id]: { skip }
-        },
-        allocation: {}
-      });
+    /* BANK ACTIONS */
 
-    });
+    const bankActions =
+      Math.floor(Math.random()*2);
 
-  });
+    for(let b=0;b<bankActions;b++){
 
-  loans.forEach(l => {
+      const loan =
+        loans[Math.floor(Math.random()*loans.length)];
+
+      if(capitalUsed + loan.principal < capitalLimit){
+
+        allocation[loan.id] = loan.principal;
+        capitalUsed += loan.principal;
+
+      }
+
+    }
+
+    /* INVESTOR SKIPS */
+
+    const skipCount =
+      2 + Math.floor(Math.random()*4);
+
+    for(let s=0;s<skipCount;s++){
+
+      const inv =
+        investors[Math.floor(Math.random()*investors.length)];
+
+      negotiation[inv.id] = {
+        skip: [3,6,12][Math.floor(Math.random()*3)]
+      };
+
+    }
+
+    /* INVESTOR REDUCTIONS */
+
+    const reduceCount =
+      Math.floor(Math.random()*3);
+
+    for(let r=0;r<reduceCount;r++){
+
+      const inv =
+        investors[Math.floor(Math.random()*investors.length)];
+
+      const amount =
+        [100000,200000,300000,500000]
+        [Math.floor(Math.random()*4)];
+
+      if(capitalUsed + amount < capitalLimit){
+
+        allocation[inv.id] = amount;
+        capitalUsed += amount;
+
+      }
+
+    }
 
     scenarios.push({
-      name: `Close ${l.name}`,
-      allocation: {
-        [l.id]: l.principal
-      },
-      negotiation: {}
+      name: `Strategy ${i+1}`,
+      allocation,
+      negotiation
     });
 
-  });
-
-  investors.forEach(inv => {
-
-    loans.forEach(l => {
-
-      scenarios.push({
-        name:
-          `Close ${l.name} + Skip ${inv.name}`,
-        allocation: {
-          [l.id]: l.principal
-        },
-        negotiation: {
-          [inv.id]: { skip: 12 }
-        }
-      });
-
-    });
-
-  });
+  }
 
   return scenarios;
 
 }
-
 
 function runScenarioEngine(){
 

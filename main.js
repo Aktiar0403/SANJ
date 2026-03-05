@@ -1052,6 +1052,14 @@ console.log({
   totalMonthlyBurden,
   netMonthly
 });
+
+return {
+  netMonthly,
+  runway,
+  totalMonthlyBurden,
+  operatingSurplus
+};
+
 }
 function runSurvivalSimulation(){
 

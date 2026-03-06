@@ -61,6 +61,12 @@ let businessLoans = [
   }
 ];
 
+const lockedCombinationInvestors = [
+  "Munna",
+  "Bappon"
+];
+
+
 /* ==============================
    LOAD PRIVATE INVESTORS
 ============================== */
@@ -1591,10 +1597,12 @@ function generateScenarioCombinations(){
     "Raushan"
   ];
 
-  const investors =
-    baseInvestors.filter(i =>
-      !lockedNames.includes(i.name)
-    );
+
+ const investors =
+  baseInvestors.filter(i =>
+    !lockedNames.includes(i.name) &&
+    !lockedCombinationInvestors.includes(i.name)
+  );
 
   const loans =
     [...personalLoans, ...businessLoans];
